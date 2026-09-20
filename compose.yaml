@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: refurbshield-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: refurbshield_dev
+      POSTGRES_DB: refurbshield
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - refurbshield-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d refurbshield"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  refurbshield-postgres-data:

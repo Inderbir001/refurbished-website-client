@@ -1,0 +1,4 @@
+import { NotificationChannel } from "@prisma/client";
+import { AppError } from "../http";
+import { NotificationProvider } from "./types";
+export function providerFor(channel: NotificationChannel): NotificationProvider { if (channel === NotificationChannel.IN_APP) return { channel, async send(notification) { return { providerId: `in-app:${notification.id}` }; } }; return { channel, async send() { const configured = channel === NotificationChannel.EMAIL ? process.env.EMAIL_PROVIDER_API_KEY : channel === NotificationChannel.SMS ? process.env.SMS_PROVIDER_API_KEY : process.env.WHATSAPP_PROVIDER_TOKEN; if (!configured) throw new AppError(503, `${channel} notifications are not configured.`); throw new AppError(501, `${channel} provider adapter must be selected before dispatch is enabled.`); } }; }

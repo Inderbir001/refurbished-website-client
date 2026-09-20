@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { currentSession } from "@/lib/auth";
+export async function Header() { const session = await currentSession(); return <><div className="announcement">Free delivery over ₹499 · 6-month warranty on Certified Refurbished</div><header className="header"><Link href="/" className="wordmark">refurb<span>shield</span></Link><nav><Link href="/products">Shop</Link><Link href="/products?q=refurbished">Refurbished</Link><Link href="/products?q=accessories">Accessories</Link></nav><div className="header-actions"><Link href="/products" aria-label="Search">Search</Link><Link href={session ? "/account" : "/login"}>{session ? "Account" : "Sign in"}</Link><Link href="/cart">Cart</Link></div></header></> }

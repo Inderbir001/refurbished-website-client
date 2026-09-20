@@ -1,0 +1,6 @@
+import { NextRequest } from "next/server";
+import { PaymentGateway } from "@prisma/client";
+import { db } from "@/lib/db";
+import { apiError, AppError, json } from "@/lib/http";
+import { markPaymentFailed, markPaymentSuccess, providerFor } from "@/lib/payments";
+export async function POST(request: NextRequest, context: { params: Promise<{ gateway: string }> }) { try { const gateway = (await context.params).gateway.toUpperCase() as PaymentGateway; if (!Object.values(PaymentGateway).includes(gateway)) throw new AppError(404, "Unknown payment gateway."); const payload = await request.text(); const signature = gateway === PaymentGateway.PHONEPE ? request.headers.get("authorization") ?? undefined : request.headers.get("x-razorpay-signature") ?? undefined; const result = await providerFor(gateway).verifyWebhook(payload, signature); if (!result.paymentId) return json({ received: true }); const payment = await db.payment.findFirst({ where: { id: result.paymentId, gateway } }); if (!payment) throw new AppError(404, "Payment reference not found."); if (result.status === "SUCCESS") await markPaymentSuccess(payment.id, result.transactionId, { webhook: "verified" }); else await markPaymentFailed(payment.id, result.transactionId, { webhook: "verified" }); return json({ received: true }); } catch (error) { return apiError(error); } }

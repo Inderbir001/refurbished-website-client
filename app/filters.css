@@ -1,0 +1,5 @@
+.filter-form { display: flex; flex-direction: column; gap: 13px; }
+.filter-form label { display: flex; flex-direction: column; gap: 5px; color: var(--muted); font-size: 12px; }
+.filter-form select { padding: 9px; border: 1px solid var(--line); background: var(--cream); color: var(--ink); }
+.filter-form label:has(input[type="checkbox"]) { display: block; }
+.filter-form button { background: var(--ink); color: white; border: 0; padding: 10px; cursor: pointer; }

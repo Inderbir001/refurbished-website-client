@@ -1,0 +1,6 @@
+"use client";
+import { Suspense } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+function PaymentReturnContent() { const router = useRouter(); const paymentId = useSearchParams().get("paymentId"); const [message, setMessage] = useState("Verifying payment with PhonePe…"); useEffect(() => { if (!paymentId) { setMessage("Payment reference is missing."); return; } fetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId, payload: {} }) }).then(async (response) => ({ response, result: await response.json() })).then(({ response, result }) => { if (!response.ok) setMessage(result.error ?? "Payment could not be verified."); else router.replace(`/order-success/${result.data.confirmationToken}`); }).catch(() => setMessage("Payment verification is temporarily unavailable.")); }, [paymentId, router]); return <section className="page-shell"><p className="eyebrow">SECURE PAYMENT</p><h1>{message}</h1><p>Do not close this page while the provider status is checked.</p></section>; }
+export default function PaymentReturn() { return <Suspense fallback={<section className="page-shell"><h1>Loading secure payment…</h1></section>}><PaymentReturnContent /></Suspense>; }

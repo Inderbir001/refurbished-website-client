@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function AccountNav() { return <nav className="account-nav"><Link href="/account">Overview</Link><Link href="/account/orders">Orders</Link><Link href="/account/wishlist">Wishlist</Link><Link href="/account/addresses">Addresses</Link><Link href="/account/reviews">Reviews</Link><Link href="/account/notifications">Updates</Link><Link href="/account/profile">Profile</Link></nav>; }

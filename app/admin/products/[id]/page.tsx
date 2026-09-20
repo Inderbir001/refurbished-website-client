@@ -1,0 +1,9 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { Role } from "@prisma/client";
+import { ProductEditor } from "@/components/admin/product-editor";
+import { SensitiveDeviceEditor } from "@/components/admin/sensitive-device-editor";
+import { currentSession } from "@/lib/auth";
+import { db } from "@/lib/db";
+export const dynamic = "force-dynamic";
+export default async function AdminProduct({ params }: { params: Promise<{ id: string }> }) { const session = await currentSession(); const allowed: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.PRODUCT_MANAGER]; if (!session || !allowed.includes(session.role)) redirect("/login"); const id = (await params).id; const [product, categories, brands] = await Promise.all([db.product.findUnique({ where: { id }, include: { variants: { orderBy: { createdAt: "asc" } }, images: { orderBy: { position: "asc" } } } }), db.category.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), db.brand.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } })]); if (!product) notFound(); const value = { ...product, specifications: (product.specifications ?? {}) as Record<string, string>, dimensions: (product.dimensions ?? {}) as Record<string, string>, variants: product.variants.map((variant) => ({ ...variant, barcode: variant.barcode ?? "", attributes: (variant.attributes ?? {}) as Record<string, string> })), images: product.images.map(({ url, alt, position }) => ({ url, alt, position })) }; return <section className="admin-page"><Link className="text-link" href="/admin/products">← Products</Link><p className="eyebrow">CATALOG EDITOR</p><h1>{product.name}</h1><div className="admin-panel"><ProductEditor product={value} categories={categories} brands={brands} /></div><div className="admin-panel"><SensitiveDeviceEditor productId={product.id} variants={product.variants.map(({ id, title, sku }) => ({ id, title, sku }))} /></div></section>; }

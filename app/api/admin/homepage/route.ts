@@ -1,0 +1,10 @@
+import { HomepageSectionType, Role } from "@prisma/client";
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireAdmin } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { apiError, AppError, json } from "@/lib/http";
+const sectionSchema = z.object({ id: z.string().cuid().optional(), type: z.nativeEnum(HomepageSectionType), title: z.string().max(120).optional(), subtitle: z.string().max(500).optional(), position: z.number().int().min(0), isVisible: z.boolean() });
+const bannerSchema = z.object({ title: z.string().min(2), subtitle: z.string().max(300).optional(), imageUrl: z.string().url(), mobileImageUrl: z.string().url().optional(), linkUrl: z.string().startsWith("/").optional(), position: z.number().int().min(0).default(0), isVisible: z.boolean().default(true) });
+export async function PATCH(request: NextRequest) { try { const admin = await requireAdmin(request, [Role.SUPER_ADMIN, Role.ADMIN]); const input = sectionSchema.parse(await request.json()); if (!input.id) throw new AppError(400, "Section ID is required."); const section = await db.homepageSection.update({ where: { id: input.id }, data: { type: input.type, title: input.title, subtitle: input.subtitle, position: input.position, isVisible: input.isVisible } }); await db.auditLog.create({ data: { actorId: admin.sub, action: "HOMEPAGE_SECTION_UPDATED", entityType: "HomepageSection", entityId: section.id } }); return json(section); } catch (error) { return apiError(error); } }
+export async function POST(request: NextRequest) { try { const admin = await requireAdmin(request, [Role.SUPER_ADMIN, Role.ADMIN]); const input = bannerSchema.parse(await request.json()); const store = await db.store.findFirst(); if (!store) throw new AppError(409, "Store setup is incomplete."); const banner = await db.homepageBanner.create({ data: { ...input, storeId: store.id } }); await db.auditLog.create({ data: { actorId: admin.sub, action: "HOMEPAGE_BANNER_CREATED", entityType: "HomepageBanner", entityId: banner.id } }); return json(banner, 201); } catch (error) { return apiError(error); } }

@@ -1,0 +1,5 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+export default function Register() { const router = useRouter(); const [error, setError] = useState(""); async function register(form: FormData) { const response = await fetch("/api/auth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(form)) }); const data = await response.json(); if (!response.ok) return setError(data.error); router.push("/"); router.refresh(); } return <section className="auth-page"><form action={register}><p className="eyebrow">NEW TO REFURBSHIELD</p><h1>Create your account</h1><label>Name<input required name="name" /></label><label>Email<input required type="email" name="email" /></label><label>Password<input required type="password" name="password" minLength={8} /></label>{error && <p className="form-error">{error}</p>}<button className="primary-button">Create account</button><p>Already registered? <Link href="/login">Sign in</Link></p></form></section> }

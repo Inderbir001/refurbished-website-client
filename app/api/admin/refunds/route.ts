@@ -1,0 +1,8 @@
+import { PaymentStatus, RefundStatus, Role } from "@prisma/client";
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireAdmin } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { apiError, AppError, json } from "@/lib/http";
+const schema = z.object({ orderId: z.string().cuid(), amount: z.number().int().positive(), reason: z.string().trim().min(5).max(500) });
+export async function POST(request: NextRequest) { try { const admin = await requireAdmin(request, [Role.SUPER_ADMIN, Role.ADMIN, Role.ORDER_MANAGER]); const input = schema.parse(await request.json()); const order = await db.order.findUnique({ where: { id: input.orderId }, include: { payments: { where: { status: PaymentStatus.SUCCESS }, take: 1 }, refunds: { where: { status: { in: [RefundStatus.REQUESTED, RefundStatus.PROCESSING, RefundStatus.SUCCESS] } } } } }); if (!order || !order.payments[0]) throw new AppError(409, "A successful payment is required before refunding."); const alreadyRefunded = order.refunds.reduce((sum, refund) => sum + refund.amount, 0); if (input.amount > order.total - alreadyRefunded) throw new AppError(409, "Refund exceeds the remaining refundable amount."); const refund = await db.refund.create({ data: { orderId: order.id, paymentId: order.payments[0].id, amount: input.amount, reason: input.reason, status: RefundStatus.REQUESTED } }); await db.auditLog.create({ data: { actorId: admin.sub, action: "REFUND_REQUESTED", entityType: "Refund", entityId: refund.id, after: { amount: refund.amount, reason: refund.reason } } }); return json({ ...refund, providerActionRequired: true }, 201); } catch (error) { return apiError(error); } }

@@ -1,0 +1,13 @@
+.account-nav { display: flex; gap: 24px; margin-bottom: 45px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.account-nav a { font-size: 14px; font-weight: 600; }
+.account-list { display: grid; gap: 10px; margin-top: 25px; }
+.account-list > a, .account-list > article { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; align-items: center; gap: 16px; padding: 18px; background: var(--cream); border: 1px solid var(--line); }
+.inline-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.inline-actions button, .saved-address button { padding: 8px 12px; border: 1px solid var(--line); background: var(--cream); cursor: pointer; }
+.saved-address { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.saved-address p { color: var(--muted); line-height: 1.55; }
+.order-timeline { display: flex; gap: 4px; overflow-x: auto; margin: 25px 0; }
+.order-timeline span { padding: 10px 13px; background: #e4e8e0; white-space: nowrap; font-size: 11px; }
+.order-timeline .current { background: var(--acid); color: var(--ink); font-weight: 700; }
+@media (max-width: 900px) { .account-nav { display: flex!important; overflow-x: auto; } }
+@media (max-width: 700px) { .account-list > a, .account-list > article { grid-template-columns: 1fr; } }

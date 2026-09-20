@@ -1,0 +1,5 @@
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+export default function Login() { const router = useRouter(); const [error, setError] = useState(""); async function login(form: FormData) { const response = await fetch("/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(form)) }); const data = await response.json(); if (!response.ok) return setError(data.error); router.push(data.data.role === "CUSTOMER" ? "/" : "/admin"); router.refresh(); } return <section className="auth-page"><form action={login}><p className="eyebrow">WELCOME BACK</p><h1>Sign in</h1><label>Email<input required type="email" name="email" /></label><label>Password<input required type="password" name="password" /></label>{error && <p className="form-error">{error}</p>}<button className="primary-button">Sign in</button><p><Link href="/forgot-password">Forgot password?</Link></p><p>New here? <Link href="/register">Create an account</Link></p></form></section> }

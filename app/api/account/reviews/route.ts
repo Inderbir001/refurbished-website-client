@@ -1,0 +1,7 @@
+import { NextRequest } from "next/server";
+import { z } from "zod";
+import { requireSession } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { apiError, AppError, json } from "@/lib/http";
+const schema = z.object({ productId: z.string().cuid(), rating: z.number().int().min(1).max(5), body: z.string().trim().min(10).max(2000), imageUrls: z.array(z.string().url()).max(5).default([]) });
+export async function POST(request: NextRequest) { try { const session = await requireSession(request); const input = schema.parse(await request.json()); const purchased = await db.orderItem.findFirst({ where: { productId: input.productId, order: { userId: session.sub, status: "DELIVERED", paymentStatus: "SUCCESS" } } }); if (!purchased) throw new AppError(403, "Only customers with a delivered purchase can review this product."); const { imageUrls, ...reviewInput } = input; const review = await db.$transaction(async (tx) => { const record = await tx.review.upsert({ where: { productId_userId: { productId: input.productId, userId: session.sub } }, update: { rating: input.rating, body: input.body, isVisible: false }, create: { ...reviewInput, userId: session.sub, verifiedPurchase: true } }); await tx.reviewImage.deleteMany({ where: { reviewId: record.id } }); if (imageUrls.length) await tx.reviewImage.createMany({ data: imageUrls.map((url, position) => ({ reviewId: record.id, url, position })) }); return record; }); return json(review, 201); } catch (error) { return apiError(error); } }

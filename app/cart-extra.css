@@ -1,0 +1,3 @@
+.coupon-form { display: flex; margin: 14px 0; }
+.coupon-form input { min-width: 0; flex: 1; padding: 10px; border: 1px solid var(--line); background: white; }
+.coupon-form button { border: 0; background: var(--ink); color: white; padding: 0 13px; cursor: pointer; }
