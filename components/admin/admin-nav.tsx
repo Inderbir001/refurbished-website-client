@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wordmark } from "@/components/store/wordmark";
 
 const groups: { label: string; links: [string, string][] }[] = [
   { label: "Home", links: [["/admin", "Dashboard"]] },
@@ -17,7 +16,6 @@ export function AdminNav() {
   const active = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(href + "/"));
   return (
     <aside className="admin-side" aria-label="Admin menu">
-      <Link href="/" className="wordmark admin-brand"><Wordmark /></Link>
       <div className="admin-groups">
         {groups.map((group) => (
           <div className="admin-group" key={group.label}>
@@ -26,7 +24,6 @@ export function AdminNav() {
           </div>
         ))}
       </div>
-      <Link href="/" target="_blank" className="admin-viewstore">View your store ↗</Link>
     </aside>
   );
 }

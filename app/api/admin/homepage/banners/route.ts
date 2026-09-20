@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { apiError, json } from "@/lib/http";
 
 const roles = [Role.SUPER_ADMIN, Role.ADMIN];
-const target = z.object({ id: z.string().cuid() });
+const target = z.object({ id: z.string().min(1).max(64) });
 
 export async function PATCH(request: NextRequest) {
   try {
