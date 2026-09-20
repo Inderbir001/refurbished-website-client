@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { cartItemCount } from "@/lib/services/cart-service";
 import { CartBadge } from "@/components/store/cart-badge";
 import { CategoryMenu } from "@/components/store/category-menu";
+import { CategoryStrip } from "@/components/store/category-strip";
+import { getAnnouncement } from "@/lib/site-content";
 import { SearchBox } from "@/components/store/search-box";
 import { brand } from "@/lib/brand";
 import { Wordmark } from "@/components/store/wordmark";
@@ -26,14 +28,15 @@ async function menuCategories() {
 
 const icon = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 
-const highlights = ["Free delivery over ₹499", "6-month warranty on certified refurbished", "7-day easy returns", "Secure payments by Razorpay", "Tested and graded before it ships"];
-
 export async function Header() {
   const session = await currentSession();
   const staff = session ? ["SUPER_ADMIN", "ADMIN", "PRODUCT_MANAGER", "ORDER_MANAGER"].includes(session.role) : false;
-  const [count, categories] = await Promise.all([headerCartCount(session?.sub), menuCategories()]);
+  const [count, categories, announcement] = await Promise.all([headerCartCount(session?.sub), menuCategories(), getAnnouncement()]);
+  // Repeat short lists so the sliding strip always fills the screen; two identical copies make the loop seamless.
+  const reps = Math.max(1, Math.ceil(8 / announcement.messages.length));
+  const track = Array.from({ length: reps }, () => announcement.messages).flat();
   return <>
-    <div className="announcement" aria-label="Store highlights"><div className="ticker-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1}>{highlights.map((text) => <li key={text}>{text}</li>)}</ul>)}</div></div>
+    {announcement.enabled && <div className="announcement" aria-label="Store highlights"><div className="ticker-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1}>{track.map((text, index) => <li key={index}>{text}</li>)}</ul>)}</div></div>}
     <header className="site-header">
       <div className="sh-main">
         <Link href="/" className="wordmark sh-logo"><Wordmark /></Link>
@@ -50,10 +53,7 @@ export async function Header() {
       </div>
       <div className="sh-cats" role="navigation" aria-label="Categories">
         <CategoryMenu categories={categories} />
-        <div className="cat-scroll">
-          <Link href="/products?condition=REFURBISHED" className="cat-hot">Refurbished deals</Link>
-          {categories.map((category) => <Link key={category.id} href={`/category/${category.slug}`}>{category.name}</Link>)}
-        </div>
+        <Suspense fallback={<div className="cat-scroll" />}><CategoryStrip categories={categories} /></Suspense>
       </div>
     </header>
   </>;

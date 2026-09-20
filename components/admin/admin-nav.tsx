@@ -8,7 +8,7 @@ const groups: { label: string; links: [string, string][] }[] = [
   { label: "Catalog", links: [["/admin/products", "Products"], ["/admin/categories", "Categories"], ["/admin/brands", "Brands"], ["/admin/collections", "Collections"], ["/admin/inventory", "Stock"]] },
   { label: "Orders", links: [["/admin/orders", "Orders"], ["/admin/payments", "Payments"], ["/admin/shipping", "Delivery"], ["/admin/reviews", "Reviews"]] },
   { label: "People", links: [["/admin/customers", "Customers"], ["/admin/users", "Team & roles"]] },
-  { label: "Store", links: [["/admin/analytics", "Reports"], ["/admin/tax", "GST & tax"], ["/admin/settings", "Settings"], ["/admin/media", "Images"], ["/admin/audit-logs", "Activity log"]] },
+  { label: "Store", links: [["/admin/analytics", "Reports"], ["/admin/tax", "GST & tax"], ["/admin/policies", "Policies & pages"], ["/admin/settings", "Settings"], ["/admin/media", "Images"], ["/admin/audit-logs", "Activity log"]] },
 ];
 
 export function AdminNav() {
