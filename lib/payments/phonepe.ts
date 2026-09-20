@@ -2,6 +2,7 @@ import { Env, RefundRequest, StandardCheckoutClient, StandardCheckoutPayRequest 
 import { PaymentGateway } from "@prisma/client";
 import { AppError } from "../http";
 import { PaymentIntent, PaymentProvider, PaymentState, RefundResult } from "./types";
+import { brand } from "../brand";
 
 function phonePeClient() {
   const clientId = process.env.PHONEPE_CLIENT_ID;
@@ -29,7 +30,7 @@ export class PhonePeGateway implements PaymentProvider {
       .merchantOrderId(input.paymentId)
       .amount(input.amount)
       .redirectUrl(`${appUrl}/checkout/payment?paymentId=${encodeURIComponent(input.paymentId)}`)
-      .message(`RefurbShield order ${input.orderId}`)
+      .message(`${brand.name} order ${input.orderId}`)
       .expireAfter(900)
       .build();
     try {

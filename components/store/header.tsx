@@ -7,6 +7,8 @@ import { cartItemCount } from "@/lib/services/cart-service";
 import { CartBadge } from "@/components/store/cart-badge";
 import { CategoryMenu } from "@/components/store/category-menu";
 import { SearchBox } from "@/components/store/search-box";
+import { brand } from "@/lib/brand";
+import { Wordmark } from "@/components/store/wordmark";
 
 async function headerCartCount(userId?: string) {
   try { return await cartItemCount(userId ? { userId } : { sessionToken: (await cookies()).get("guest_cart")?.value }); } catch { return 0; }
@@ -24,14 +26,16 @@ async function menuCategories() {
 
 const icon = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 
+const highlights = ["Free delivery over ₹499", "6-month warranty on certified refurbished", "7-day easy returns", "Secure payments by Razorpay", "Tested and graded before it ships"];
+
 export async function Header() {
   const session = await currentSession();
   const [count, categories] = await Promise.all([headerCartCount(session?.sub), menuCategories()]);
   return <>
-    <div className="announcement">Free delivery over ₹499 · 6-month warranty on Certified Refurbished</div>
+    <div className="announcement" aria-label="Store highlights"><div className="ticker-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1}>{highlights.map((text) => <li key={text}>{text}</li>)}</ul>)}</div></div>
     <header className="site-header">
       <div className="sh-main">
-        <Link href="/" className="wordmark sh-logo">refurb<span>shield</span></Link>
+        <Link href="/" className="wordmark sh-logo"><Wordmark /></Link>
         <div className="sh-search">
           <Suspense fallback={<div className="search-box header-search" />}><SearchBox variant="header" /></Suspense>
           <Link href="/products" className="sh-shopall"><svg {...icon} width={18} height={18}><rect x="4" y="4" width="6.5" height="6.5" rx="1" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1" /></svg><span>Shop all</span></Link>

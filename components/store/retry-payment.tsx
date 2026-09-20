@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { brand } from "@/lib/brand";
 
 type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
 type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void } };
@@ -36,7 +37,7 @@ export function RetryPayment({ orderId }: { orderId: string }) {
       await loadRazorpay();
       const checkoutData = intent.data.checkoutData as { key: string; razorpayOrderId: string };
       const Razorpay = (window as unknown as RazorpayWindow).Razorpay;
-      new Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: "RefurbShield", description: `Order ${result.data.orderNumber}`, handler: async (gatewayResult) => {
+      new Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, handler: async (gatewayResult) => {
         const verification = await fetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) });
         const verified = await verification.json();
         if (!verification.ok) { setBusy(false); setMessage(verified.error ?? "Payment could not be verified."); return; }

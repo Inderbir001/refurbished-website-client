@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { brand } from "@/lib/brand";
 
 type Suggestion = { label: string; type: string; href: string };
-const recentKey = "refurbshield_recent_searches";
+const recentKey = `${brand.fileSlug}_recent_searches`;
 
 export function SearchBox({ defaultValue = "", variant = "page" }: { defaultValue?: string; variant?: "page" | "header" }) {
   const params = useSearchParams();

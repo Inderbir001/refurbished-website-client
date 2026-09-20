@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
-    "db:bootstrap": "tsx prisma/bootstrap.ts"
+    "db:bootstrap": "tsx prisma/bootstrap.ts",
+    "db:remove-demo": "tsx prisma/remove-demo.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

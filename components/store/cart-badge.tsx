@@ -24,5 +24,5 @@ export function CartBadge({ initial }: { initial: number }) {
     fetch("/api/cart/count", { signal: controller.signal }).then((response) => response.json()).then((result) => { if (typeof result.data?.count === "number") setCount(result.data.count); }).catch(() => undefined);
     return () => controller.abort();
   }, [pathname]);
-  return count > 0 ? <b className="sh-badge" aria-label={`${count} items in cart`}>{count > 99 ? "99+" : count}</b> : null;
+  return count > 0 ? <b key={count} className="sh-badge" aria-label={`${count} items in cart`}>{count > 99 ? "99+" : count}</b> : null;
 }

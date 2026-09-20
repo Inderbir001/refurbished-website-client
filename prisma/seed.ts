@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import { DiscountType, HomepageSectionType, Prisma, PrismaClient, ProductCondition, ProductStatus, Role } from "@prisma/client";
 
 const db = new PrismaClient();
+// SEED_DEMO_ONLY=1 loads the demo catalog into the EXISTING store (created by `npm run db:bootstrap`): no demo admin account,
+// no second store, no tax/settings changes. Every demo product gets the "demo-data" tag so `npm run db:remove-demo` can remove them.
+const demoOnly = process.env.SEED_DEMO_ONLY === "1";
 const image = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=85`;
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -45,9 +48,11 @@ const products: DemoProduct[] = [
 ];
 
 async function main() {
-  const store = await db.store.upsert({ where: { slug: "refurbshield" }, update: { name: "RefurbShield" }, create: { name: "RefurbShield", slug: "refurbshield" } });
-  const admin = await db.user.upsert({ where: { email: "admin@refurbshield.local" }, update: {}, create: { name: "RefurbShield Admin", email: "admin@refurbshield.local", passwordHash: await bcrypt.hash("ChangeMe123!", 12), role: Role.SUPER_ADMIN } });
-  await db.seller.upsert({ where: { storeId_slug: { storeId: store.id, slug: "refurbshield-direct" } }, update: {}, create: { storeId: store.id, name: "RefurbShield Direct", slug: "refurbshield-direct" } });
+  const store = demoOnly ? await db.store.findFirstOrThrow() : await db.store.upsert({ where: { slug: "refurbshield" }, update: { name: "RefurbShield" }, create: { name: "RefurbShield", slug: "refurbshield" } });
+  const sellerSlug = demoOnly ? `${slugify(store.name)}-direct` : "refurbshield-direct";
+  const sellerName = demoOnly ? `${store.name} Direct` : "RefurbShield Direct";
+  const admin = demoOnly ? null : await db.user.upsert({ where: { email: "admin@refurbshield.local" }, update: {}, create: { name: "RefurbShield Admin", email: "admin@refurbshield.local", passwordHash: await bcrypt.hash("ChangeMe123!", 12), role: Role.SUPER_ADMIN } });
+  await db.seller.upsert({ where: { storeId_slug: { storeId: store.id, slug: sellerSlug } }, update: {}, create: { storeId: store.id, name: sellerName, slug: sellerSlug } });
 
   const root = await db.category.upsert({ where: { storeId_slug: { storeId: store.id, slug: "electronics" } }, update: {}, create: { storeId: store.id, name: "Electronics", slug: "electronics", position: 0 } });
   const categoryNames = ["New Phones", "Refurbished Phones", "Used Phones", "Earphones", "Headphones", "Speakers", "Chargers", "USB Cables", "Adapters", "Power Banks", "Smart Watches", "Computer Accessories", "Mobile Accessories", "Other Electronics"];
@@ -59,28 +64,28 @@ async function main() {
   const categoryId = (name: string) => categoryRows.find((item) => item.name === name)!.id;
   const brandId = (name: string) => brandRows.find((item) => item.name === name)!.id;
   const collectionId = (name: string) => collectionRows.find((item) => item.name === name)!.id;
-  const seller = await db.seller.findUniqueOrThrow({ where: { storeId_slug: { storeId: store.id, slug: "refurbshield-direct" } } });
+  const seller = await db.seller.findUniqueOrThrow({ where: { storeId_slug: { storeId: store.id, slug: sellerSlug } } });
 
   for (const item of products) {
     const product = await db.product.upsert({
       where: { sku: item.sku },
-      update: { name: item.name, description: item.description, basePrice: item.basePrice, salePrice: item.salePrice, categoryId: categoryId(item.category), brandId: brandId(item.brand), condition: item.condition, warrantyMonths: item.warrantyMonths, specifications: item.specifications, status: ProductStatus.ACTIVE, tags: [slugify(item.category), slugify(item.brand), item.condition.toLowerCase()], grade: item.specifications.Grade, whatsIncluded: item.specifications.Accessories ?? "Product and charging cable where specified." },
-      create: { storeId: store.id, sellerId: seller.id, name: item.name, slug: slugify(item.name), sku: item.sku, description: item.description, condition: item.condition, status: ProductStatus.ACTIVE, basePrice: item.basePrice, salePrice: item.salePrice, categoryId: categoryId(item.category), brandId: brandId(item.brand), warrantyMonths: item.warrantyMonths, specifications: item.specifications, tags: [slugify(item.category), slugify(item.brand), item.condition.toLowerCase()], grade: item.specifications.Grade, whatsIncluded: item.specifications.Accessories ?? "Product and charging cable where specified." },
+      update: { name: item.name, description: item.description, basePrice: item.basePrice, salePrice: item.salePrice, categoryId: categoryId(item.category), brandId: brandId(item.brand), condition: item.condition, warrantyMonths: item.warrantyMonths, specifications: item.specifications, status: ProductStatus.ACTIVE, tags: [slugify(item.category), slugify(item.brand), item.condition.toLowerCase(), ...(demoOnly ? ["demo-data"] : [])], grade: item.specifications.Grade, whatsIncluded: item.specifications.Accessories ?? "Product and charging cable where specified." },
+      create: { storeId: store.id, sellerId: seller.id, name: item.name, slug: slugify(item.name), sku: item.sku, description: item.description, condition: item.condition, status: ProductStatus.ACTIVE, basePrice: item.basePrice, salePrice: item.salePrice, categoryId: categoryId(item.category), brandId: brandId(item.brand), warrantyMonths: item.warrantyMonths, specifications: item.specifications, tags: [slugify(item.category), slugify(item.brand), item.condition.toLowerCase(), ...(demoOnly ? ["demo-data"] : [])], grade: item.specifications.Grade, whatsIncluded: item.specifications.Accessories ?? "Product and charging cable where specified." },
     });
     const existingImage = await db.productImage.findFirst({ where: { productId: product.id } });
     if (!existingImage) await db.productImage.create({ data: { productId: product.id, url: item.photo, alt: item.name } });
     for (const variantInput of item.variants) {
       const sku = `${item.sku}-${variantInput.suffix}`;
       const variant = await db.productVariant.upsert({ where: { sku }, update: { attributes: variantInput.attributes as Prisma.InputJsonValue | undefined }, create: { productId: product.id, title: variantInput.title, sku, stock: variantInput.stock, price: variantInput.price, salePrice: variantInput.salePrice, attributes: variantInput.attributes as Prisma.InputJsonValue | undefined } });
-      await db.inventoryTransaction.upsert({ where: { id: `seed-${variant.id}` }, update: {}, create: { id: `seed-${variant.id}`, variantId: variant.id, quantityDelta: variantInput.stock, previousStock: 0, resultingStock: variantInput.stock, reason: "INITIAL_STOCK", actorId: admin.id, reference: "DEMO_SEED" } });
+      await db.inventoryTransaction.upsert({ where: { id: `seed-${variant.id}` }, update: {}, create: { id: `seed-${variant.id}`, variantId: variant.id, quantityDelta: variantInput.stock, previousStock: 0, resultingStock: variantInput.stock, reason: "INITIAL_STOCK", actorId: admin?.id, reference: "DEMO_SEED" } });
       if ((item.condition === ProductCondition.REFURBISHED || item.condition === ProductCondition.USED) && item.category.includes("Phones")) await db.sensitiveDeviceInformation.upsert({ where: { variantId: variant.id }, update: {}, create: { variantId: variant.id, batteryHealth: item.condition === ProductCondition.REFURBISHED ? 87 : 82, deviceCondition: item.specifications.Grade ?? "Good", screenCondition: "Inspected demo condition", bodyCondition: "Inspected demo condition", accessoriesIncluded: item.specifications.Accessories ?? "Charging cable", activationStatus: "Ready for activation", refurbishmentDetails: "Demo record. Replace with the unit-specific inspection report before sale.", repairHistory: "Demo record. Device-specific history must be entered by an authorised admin before sale." } });
     }
     for (const collection of item.collections) await db.productCollection.upsert({ where: { productId_collectionId: { productId: product.id, collectionId: collectionId(collection) } }, update: {}, create: { productId: product.id, collectionId: collectionId(collection) } });
   }
 
-  await db.storeSettings.upsert({ where: { storeId: store.id }, update: { paymentConfig: { razorpayEnabled: true, phonePeEnabled: false, snapmitEnabled: false, sandboxMode: true } }, create: { storeId: store.id, supportEmail: "support@refurbshield.example", supportPhone: "+91 90000 00000", address: { city: "Bengaluru", state: "Karnataka", country: "India" }, defaultTaxRate: 18, freeShippingThreshold: 49900, returnDays: 7, paymentConfig: { razorpayEnabled: true, phonePeEnabled: false, snapmitEnabled: false, sandboxMode: true } } });
+  if (!demoOnly) await db.storeSettings.upsert({ where: { storeId: store.id }, update: { paymentConfig: { razorpayEnabled: true, phonePeEnabled: false, snapmitEnabled: false, sandboxMode: true } }, create: { storeId: store.id, supportEmail: "support@refurbshield.example", supportPhone: "+91 90000 00000", address: { city: "Bengaluru", state: "Karnataka", country: "India" }, defaultTaxRate: 18, freeShippingThreshold: 49900, returnDays: 7, paymentConfig: { razorpayEnabled: true, phonePeEnabled: false, snapmitEnabled: false, sandboxMode: true } } });
   await db.shippingRule.upsert({ where: { id: "demo-standard-shipping" }, update: {}, create: { id: "demo-standard-shipping", storeId: store.id, name: "Standard India Delivery", states: [], pincodes: [], charge: 9900, freeShippingThreshold: 49900, estimatedDaysMin: 3, estimatedDaysMax: 7 } });
-  await db.taxRule.upsert({ where: { id: "demo-india-gst" }, update: { rate: 18, homeState: "Karnataka", isActive: true }, create: { id: "demo-india-gst", storeId: store.id, name: "Standard electronics GST", rate: 18, homeState: "Karnataka", isActive: true } });
+  if (!demoOnly) await db.taxRule.upsert({ where: { id: "demo-india-gst" }, update: { rate: 18, homeState: "Karnataka", isActive: true }, create: { id: "demo-india-gst", storeId: store.id, name: "Standard electronics GST", rate: 18, homeState: "Karnataka", isActive: true } });
   await db.coupon.upsert({ where: { code: "WELCOME10" }, update: {}, create: { code: "WELCOME10", type: DiscountType.PERCENTAGE, value: 10, minimumOrder: 99900, maximumDiscount: 50000, firstOrderOnly: true, perCustomerLimit: 1, usageLimit: 1000 } });
   await db.coupon.upsert({ where: { code: "ACCESSORY200" }, update: {}, create: { code: "ACCESSORY200", type: DiscountType.FIXED, value: 20000, minimumOrder: 149900, maximumDiscount: 20000, scopeType: "CATEGORY", scopeIds: categoryNames.filter((name) => name.includes("Accessories")).map(categoryId) } });
   const homepageSections = [{ type: HomepageSectionType.HERO, title: "CERTIFIED TECH, CLEARLY PRICED", subtitle: "New, refurbished and pre-owned electronics with honest grades and warranty coverage." }, { type: HomepageSectionType.FEATURED_PRODUCTS, title: "Worth a closer look" }, { type: HomepageSectionType.CATEGORIES, title: "Shop every essential" }, { type: HomepageSectionType.COLLECTION, title: "Curated deals" }, { type: HomepageSectionType.BRANDS, title: "Brands people ask for" }, { type: HomepageSectionType.TRUST, title: "No guesswork. Just good gear." }];
