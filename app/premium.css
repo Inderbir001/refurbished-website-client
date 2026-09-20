@@ -252,3 +252,33 @@ button:disabled { cursor: not-allowed; }
   .ticker-track ul:nth-child(2) { display: none; }
   .rv-pending, [data-reveal-group].rv-pending > * { opacity: 1 !important; }
 }
+
+/* ============================================================
+   Responsive product grid + listing (cards never get squeezed)
+   ============================================================ */
+.product-grid { grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 18px; }
+.offers .product-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.listing { grid-template-columns: 240px minmax(0, 1fr); gap: 32px; padding: 64px clamp(16px, 4vw, 80px); }
+.listing-content { min-width: 0; }
+.price-row { flex-wrap: wrap; row-gap: 2px; column-gap: 8px; }
+.filters-toggle { display: none; }
+@media (max-width: 1000px) {
+  .listing { grid-template-columns: 1fr; gap: 16px; padding-top: 40px; }
+  .listing-heading h1 { font-size: clamp(34px, 8vw, 48px); }
+  .filters-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--line); border-radius: 999px; background: #fff; box-shadow: var(--shadow-sm); font-weight: 600; cursor: pointer; width: max-content; }
+  .filters { display: none; position: static; }
+  .filters.open { display: flex; animation: dropIn .3s var(--ease); }
+  .filter-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+}
+@media (max-width: 560px) {
+  .product-grid, .offers .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .product-copy { padding: 12px; }
+  .product-name { font-size: 14px; }
+  .price-row strong { font-size: 18px; }
+  .price-row del { font-size: 12px; }
+  .card-actions { grid-template-columns: 1fr 40px; gap: 5px; }
+  .product-card button:not(.save-button) { font-size: 12.5px; padding: 9px 6px; }
+  .product-card .eyebrow { font-size: 9.5px; letter-spacing: .06em; }
+  .rating { font-size: 12px; margin: 6px 0; }
+  .discount-badge, .offers .discount-badge { font-size: 10px; padding: 5px 9px; top: 8px; left: 8px; }
+}
