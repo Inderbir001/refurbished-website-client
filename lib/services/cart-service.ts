@@ -33,3 +33,8 @@ export async function changeCartItem(actor: CartActor, itemId: string, quantity:
 }
 export function couponLines(cart: Awaited<ReturnType<typeof getCart>>): CouponLine[] { return cart.items.map((item) => ({ productId: item.productId, categoryId: item.product.categoryId, collectionIds: item.product.collections.map((entry) => entry.collectionId), unitPrice: priceFor(item.variant ?? { price: null, salePrice: null }, item.product), quantity: item.quantity })); }
 export async function cartTotals(cart: Awaited<ReturnType<typeof getCart>>, userId?: string) { const lines = couponLines(cart); let discount = 0; let couponError: string | undefined; if (cart.couponCode) { try { discount = (await validateCouponForCart(cart.couponCode, lines, userId)).discount; } catch (error) { couponError = error instanceof Error ? error.message : "Coupon is unavailable."; } } return { ...calculateCheckoutTotals(lines, { discount }), couponCode: cart.couponCode, couponError }; }
+export async function cartItemCount(actor: { userId?: string; sessionToken?: string }) {
+  if (!actor.userId && !actor.sessionToken) return 0;
+  const total = await db.cartItem.aggregate({ _sum: { quantity: true }, where: { cart: actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken } } });
+  return total._sum.quantity ?? 0;
+}

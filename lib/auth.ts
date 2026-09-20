@@ -2,6 +2,7 @@ import { Role } from "@prisma/client";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
+import { db } from "@/lib/db";
 import { AppError } from "@/lib/http";
 
 const key = () => {
@@ -15,7 +16,13 @@ export async function signSession(user: { id: string; role: Role; email: string 
 }
 export async function readSession(token?: string): Promise<Session | null> {
   if (!token) return null;
-  try { const { payload } = await jwtVerify(token, key()); return { sub: payload.sub!, role: payload.role as Role, email: payload.email as string }; } catch { return null; }
+  try {
+    const { payload } = await jwtVerify(token, key());
+    // The token is only proof of a past login: confirm the account still exists and is active, and use its current role.
+    const user = await db.user.findUnique({ where: { id: payload.sub! }, select: { id: true, role: true, email: true, isActive: true } });
+    if (!user || !user.isActive) return null;
+    return { sub: user.id, role: user.role, email: user.email };
+  } catch { return null; }
 }
 export async function currentSession() { return readSession((await cookies()).get("session")?.value); }
 export async function sessionFromRequest(request: NextRequest) { return readSession(request.cookies.get("session")?.value); }

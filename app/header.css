@@ -1,0 +1,52 @@
+.site-header { position: sticky; top: 0; z-index: 50; background: var(--cream); border-bottom: 1px solid var(--line); }
+.sh-main { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(16px, 3vw, 44px); padding: 14px clamp(16px, 5vw, 80px); }
+.sh-logo { font-size: 24px; white-space: nowrap; }
+.sh-actions { display: flex; align-items: center; gap: clamp(14px, 2vw, 28px); }
+.sh-action { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.sh-action:hover { color: var(--orange); }
+.sh-cart-icon { position: relative; display: inline-flex; }
+.sh-badge { position: absolute; top: -7px; right: -10px; min-width: 18px; height: 18px; padding: 0 5px; display: grid; place-items: center; border-radius: 9px; background: var(--orange); color: #fff; font: 700 10px 'DM Sans', sans-serif; }
+
+.sh-search { display: flex; align-items: stretch; gap: 10px; width: 100%; max-width: 860px; margin: 0 auto; }
+.sh-shopall { flex: none; display: flex; align-items: center; gap: 8px; padding: 0 18px; background: var(--orange); color: #fff; font-size: 14px; font-weight: 700; white-space: nowrap; }
+.sh-shopall:hover { background: var(--ink); }
+.header-search { flex: 1; min-width: 0; margin: 0; }
+.header-search form { border: 1.5px solid var(--ink); background: #fff; }
+.header-search form:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px #fb6b4829; }
+.header-search input { flex: 1; min-width: 0; padding: 13px 16px; border: 0; background: transparent; outline: 0; font-size: 15px; }
+.header-search input::-webkit-search-cancel-button { display: none; }
+.header-search button { border: 0; background: var(--ink); color: #fff; padding: 0 20px; cursor: pointer; display: grid; place-items: center; }
+.header-search button:hover { background: var(--orange); }
+.header-search .search-suggestions { top: calc(100% + 4px); max-height: 70vh; overflow-y: auto; }
+.header-search .search-suggestions a:hover { background: var(--paper); }
+
+.sh-cats { display: flex; align-items: stretch; border-top: 1px solid var(--line); padding: 0 clamp(16px, 5vw, 80px); }
+.all-cats { position: relative; flex: none; }
+.all-cats-toggle { height: 100%; display: flex; align-items: center; gap: 9px; padding: 11px 18px 11px 0; margin-right: 6px; border: 0; border-right: 1px solid var(--line); background: transparent; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.all-cats-toggle:hover, .all-cats-toggle[aria-expanded="true"] { color: var(--orange); }
+.all-cats-panel { position: absolute; top: 100%; left: 0; z-index: 60; width: min(680px, 92vw); display: grid; grid-template-columns: repeat(3, 1fr); background: var(--cream); border: 1px solid var(--line); box-shadow: 0 16px 34px #14211f24; }
+.all-cats-panel a { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.all-cats-panel a:hover { background: var(--paper); color: var(--orange); }
+.all-cats-panel small { display: block; margin-top: 3px; color: var(--muted); font-weight: 400; }
+.all-cats-panel .all-cats-all { grid-column: 1 / -1; border-bottom: 0; font-weight: 700; color: var(--orange); }
+
+.cat-scroll { display: flex; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.cat-scroll::-webkit-scrollbar { display: none; }
+.cat-scroll a { flex: none; padding: 12px 15px; font-size: 13px; font-weight: 600; white-space: nowrap; border-bottom: 2px solid transparent; }
+.cat-scroll a:hover { color: var(--orange); border-bottom-color: var(--orange); }
+.cat-scroll .cat-hot { color: var(--orange); }
+
+@media (max-width: 900px) {
+  .sh-main { grid-template-columns: 1fr auto; gap: 12px; padding: 10px 16px; }
+  .sh-search { grid-column: 1 / -1; grid-row: 2; max-width: none; }
+  .sh-shopall { padding: 0 13px; font-size: 13px; }
+  .sh-action span:not(.sh-cart-icon) { display: none; }
+  .sh-actions { gap: 20px; }
+  .sh-cats { padding: 0 16px; }
+  .all-cats-toggle span { display: none; }
+  .all-cats-toggle { padding-right: 14px; }
+  .all-cats-panel { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .all-cats-panel { position: fixed; top: auto; left: 0; right: 0; width: auto; max-height: 70vh; overflow-y: auto; }
+}

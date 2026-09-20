@@ -1,0 +1,30 @@
+.storefront-admin h2 { font: 600 24px 'Playfair Display', serif; margin: 26px 0 6px; }
+.storefront-admin h2:first-child { margin-top: 4px; }
+.sf-hint { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 14px; max-width: 720px; }
+.sf-hint a { color: var(--orange); font-weight: 600; }
+.sf-sections { display: grid; gap: 8px; }
+.sf-row { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 12px 14px; background: #fff; border: 1px solid var(--line); }
+.sf-row.off { opacity: .55; background: var(--paper); }
+.sf-order { display: grid; gap: 4px; }
+.sf-order button { width: 30px; height: 26px; border: 1px solid var(--line); background: var(--cream); cursor: pointer; }
+.sf-order button:disabled { opacity: .35; cursor: not-allowed; }
+.sf-main small { display: block; color: var(--muted); font-size: 12px; margin: 2px 0 8px; }
+.sf-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.sf-fields label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.sf-fields input { padding: 9px; border: 1px solid var(--line); background: #fff; }
+.sf-toggle { min-width: 84px; padding: 8px 12px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; }
+.sf-toggle.on { background: #e2f4c4; border-color: #b5d97a; color: #2b5a13; }
+.sf-banners { display: grid; gap: 8px; margin-bottom: 18px; }
+.sf-banner { display: grid; grid-template-columns: 120px 1fr auto; gap: 14px; align-items: center; padding: 10px; background: #fff; border: 1px solid var(--line); }
+.sf-banner.off { opacity: .55; }
+.sf-banner img { width: 120px; height: 70px; object-fit: cover; background: #e9ebe4; }
+.sf-banner small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.sf-banner-actions { display: flex; gap: 6px; }
+.sf-banner-actions button { padding: 7px 11px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.sf-msg { margin-top: 14px; padding: 10px 14px; background: var(--paper); border: 1px solid var(--line); font-size: 14px; }
+@media (max-width: 700px) {
+  .sf-row { grid-template-columns: auto 1fr; }
+  .sf-toggle { grid-column: 1 / -1; }
+  .sf-banner { grid-template-columns: 1fr; }
+  .sf-banner img { width: 100%; height: 120px; }
+}
