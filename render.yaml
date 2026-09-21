@@ -1,8 +1,37 @@
+# Backend service for the split deployment (frontend on Vercel, backend on Render, database on Supabase).
+# It runs the same Next.js app, but only its /api/* routes are used: the API, payment webhooks, cron endpoints and the
+# private /api/internal/* endpoints the Vercel frontend uses to read data. Do NOT set BACKEND_URL here.
+# Secret values are entered in the Render dashboard (sync: false) and never committed.
 services:
   - type: web
-    name: refurbshield-marketplace
-    env: node
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    name: mobilenmore-api
+    runtime: node
+    region: singapore          # closest Render region to Mumbai (Supabase) and Vercel bom1
+    plan: free                 # free instances sleep after ~15 min idle; use "starter" for production, or keep it awake (see docs/DEPLOYMENT.md)
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npx next start -H 0.0.0.0 -p $PORT
     healthCheckPath: /api/health
-    autoDeploy: false
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL          # Supabase transaction pooler (port 6543) + ?pgbouncer=true&connection_limit=5
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: DEVICE_DATA_ENCRYPTION_KEY
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: INTERNAL_API_SECRET   # must match the value on Vercel
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL   # the public site address, e.g. https://mobilenmore.online
+        sync: false
+      - key: ALLOWED_ORIGINS       # extra site addresses allowed to submit forms, e.g. the *.vercel.app alias (comma separated)
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
