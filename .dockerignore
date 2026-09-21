@@ -1,0 +1,12 @@
+node_modules
+.next
+.next-frontend
+.next-*
+.git
+.env
+.env.*
+!.env.example
+coverage
+*.log
+docs
+tests

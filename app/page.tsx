@@ -3,6 +3,7 @@ import { HomepageSectionType } from "@prisma/client";
 import { CopyCode } from "@/components/store/copy-code";
 import { ProductCard } from "@/components/store/product-card";
 import { db } from "@/lib/db";
+import { pageData } from "@/lib/page-data";
 import { listDeals, productCardInclude } from "@/lib/catalog";
 import { custom, legacyTitles } from "@/lib/homepage";
 import { dealOf, inr } from "@/lib/money";
@@ -29,14 +30,7 @@ function couponCopy(coupon: Coupon) {
 
 export default async function Home() {
   const now = new Date();
-  const [store, sections, banners, deals, coupons, collections] = await Promise.all([
-    db.store.findFirst({ include: { settings: true } }),
-    db.homepageSection.findMany({ where: { isVisible: true }, orderBy: { position: "asc" } }),
-    db.homepageBanner.findMany({ where: { isVisible: true, AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] }, orderBy: { position: "asc" } }),
-    listDeals(),
-    db.coupon.findMany({ where: { isActive: true, startsAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, orderBy: { createdAt: "desc" }, take: 12 }),
-    db.collection.findMany({ where: { isActive: true, products: { some: { product: { status: "ACTIVE", deletedAt: null } } } }, include: { products: { where: { product: { status: "ACTIVE", deletedAt: null } }, orderBy: { position: "asc" }, take: 4, include: { product: { include: productCardInclude } } } }, orderBy: { createdAt: "asc" }, take: 3 }),
-  ]);
+  const { store, sections, banners, deals, coupons, collections } = await pageData("home");
 
   const inStock = deals.filter((product) => product.variants.some((variant) => variant.stock > 0));
   const ranked = inStock.map((product) => ({ product, ...dealOf(product) })).sort((a, b) => b.percent - a.percent || b.saving - a.saving);

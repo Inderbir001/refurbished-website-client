@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AddToCart } from "@/components/store/add-to-cart";
-import { getProduct } from "@/lib/catalog";
+import { cookies } from "next/headers";
+import { pageData } from "@/lib/page-data";
 import { inr, priceFor } from "@/lib/money";
 import { ReviewForm } from "@/components/store/review-form";
 import { brand } from "@/lib/brand";
-import { currentSession } from "@/lib/auth";
-import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const product = await getProduct((await params).slug);
+  const token = (await cookies()).get("session")?.value;
+  const { product } = await pageData("product", { slug: (await params).slug, token });
   if (!product) return { title: "Product not found" };
   return {
     title: product.seoTitle ?? product.name,
@@ -22,11 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const product = await getProduct((await params).slug);
+  const token = (await cookies()).get("session")?.value;
+  const { product, canReview } = await pageData("product", { slug: (await params).slug, token });
   if (!product) notFound();
-  // Reviews are for buyers only: the form appears just for a signed-in customer with a delivered, paid order for this product.
-  const session = await currentSession();
-  const canReview = session ? Boolean(await db.orderItem.findFirst({ where: { productId: product.id, order: { userId: session.sub, status: "DELIVERED", paymentStatus: "SUCCESS" } }, select: { id: true } })) : false;
+  // Reviews are for buyers only: the form appears just for a signed-in customer with a delivered, paid order for this product (decided by the same one request).
   const price = priceFor(product.variants[0] ?? { price: null, salePrice: null }, product);
   const structuredData = {
     "@context": "https://schema.org", "@type": "Product", name: product.name, description: product.description,

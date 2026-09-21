@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { cache } from "react";
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/http";
+import { invalidatePageMemo } from "@/lib/page-memo";
 import { backendFetch, isFrontendOnly } from "@/lib/remote";
 
 const key = () => {
@@ -50,6 +51,8 @@ export const currentSession = cache(async () => readSession((await cookies()).ge
 export async function sessionFromRequest(request: NextRequest) { return readSession(request.cookies.get("session")?.value); }
 export async function requireSession(request: NextRequest) { const session = await sessionFromRequest(request); if (!session) throw new AppError(401, "Please sign in to continue."); return session; }
 export async function requireAdmin(request: NextRequest, allowed: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.PRODUCT_MANAGER]) {
+  // An admin change is coming: drop the short-lived storefront memory so the store shows it straight away.
+  if (request.method !== "GET" && request.method !== "HEAD") invalidatePageMemo();
   const session = await sessionFromRequest(request);
   if (!session || !allowed.includes(session.role)) throw new AppError(403, "Administrator access is required.");
   return session;

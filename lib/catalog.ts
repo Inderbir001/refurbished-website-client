@@ -2,8 +2,8 @@ import { ProductStatus, Prisma } from "@prisma/client";
 import { cache } from "react";
 import { db } from "@/lib/db";
 
-// % and _ typed by a visitor are ordinary characters, not LIKE wildcards.
-export const likeEscape = (value: string) => value.replace(/[\%_]/g, (char) => `\${char}`);
+export { likeEscape } from "./like";
+import { likeEscape } from "./like";
 export const productCardInclude = { brand: true, category: true, images: { orderBy: { position: "asc" as const }, take: 1 }, variants: { select: { id: true, stock: true, price: true, salePrice: true, title: true, attributes: true } }, reviews: { where: { isVisible: true }, select: { rating: true } } } satisfies Prisma.ProductInclude;
 export type ProductFilters = { q?: string; category?: string; brand?: string; condition?: "NEW" | "REFURBISHED" | "USED"; min?: number; max?: number; availability?: boolean; storage?: string; ram?: string; color?: string; rating?: number; sort?: string };
 export async function listProducts(input: string | ProductFilters = {}) {

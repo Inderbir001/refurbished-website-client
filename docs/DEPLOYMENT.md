@@ -59,3 +59,29 @@ Supabase Auth is optional in this version because application sessions are imple
 - Configure notification providers or keep those channels disabled.
 - Confirm reservation/reconciliation/notification schedules and health monitoring.
 - Run validation, migration status, TypeScript, tests and a production build.
+
+## Move the backend to Mumbai (Fly.io) - faster pages
+
+Render's nearest region is Singapore, so every backend-to-database query crosses regions (Mumbai <-> Singapore). Fly.io has a
+Mumbai region (`bom`), next to Supabase (ap-south-1) and Vercel (`bom1`). The repo already contains `Dockerfile`, `fly.toml`
+and `.dockerignore`. It is a paid service (roughly a few dollars a month for one always-on 512 MB machine).
+
+1. Install the CLI and sign in: `fly auth signup` (or `fly auth login`).
+2. Create the app without deploying: `fly launch --no-deploy --copy-config` (keep the name `mobilenmore-api`, or pick another and
+   edit `app` in `fly.toml`; choose region `bom`; say No to a database and No to Redis).
+3. Set the secrets (same values as the Render service; never commit them). One command, all at once:
+   `fly secrets set DATABASE_URL=... AUTH_SECRET=... DEVICE_DATA_ENCRYPTION_KEY=... CRON_SECRET=... INTERNAL_API_SECRET=... NEXT_PUBLIC_APP_URL=... ALLOWED_ORIGINS=... RAZORPAY_KEY_ID=... RAZORPAY_KEY_SECRET=... RAZORPAY_WEBHOOK_SECRET=...`
+4. Deploy: `fly deploy --build-arg NEXT_PUBLIC_APP_URL=https://<your public site>` (about 5 minutes the first time).
+5. Check `https://mobilenmore-api.fly.dev/api/health` returns `{"status":"ok"}`.
+6. Point everything at the new address, then redeploy Vercel (BACKEND_URL is read at build time):
+   - Vercel: `BACKEND_URL` = `https://mobilenmore-api.fly.dev`
+   - cron-job.org: the 4 jobs (keep-alive is no longer needed but harmless)
+   - Razorpay webhook: `https://mobilenmore-api.fly.dev/api/payments/webhook/razorpay`
+7. When the site works on the new backend, delete the Render service.
+
+Data is not moved: both backends use the same Supabase database.
+
+### How pages get their data (why this is fast)
+Storefront pages (header, home, products, category, product) ask the backend for **one** answer each through
+`/api/internal/page` (see `lib/page-data.ts`). The backend keeps the public parts in memory for 20 seconds
+(`STOREFRONT_CACHE_SECONDS`, on by default when `API_ONLY=true`) and forgets them the moment an admin saves a change.

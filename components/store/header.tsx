@@ -1,37 +1,21 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { currentSession } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { cartItemCount } from "@/lib/services/cart-service";
 import { CartBadge } from "@/components/store/cart-badge";
 import { CategoryMenu } from "@/components/store/category-menu";
 import { CategoryStrip } from "@/components/store/category-strip";
-import { getAnnouncement } from "@/lib/site-content";
 import { SearchBox } from "@/components/store/search-box";
 import { brand } from "@/lib/brand";
+import { pageData } from "@/lib/page-data";
 import { Wordmark } from "@/components/store/wordmark";
-
-async function headerCartCount(userId?: string) {
-  try { return await cartItemCount(userId ? { userId } : { sessionToken: (await cookies()).get("guest_cart")?.value }); } catch { return 0; }
-}
-
-async function menuCategories() {
-  try {
-    const select = { id: true, name: true, slug: true, _count: { select: { products: true } } } as const;
-    const orderBy = [{ position: "asc" as const }, { name: "asc" as const }];
-    let rows = await db.category.findMany({ where: { isVisible: true, parentId: { not: null } }, select, orderBy });
-    if (!rows.length) rows = await db.category.findMany({ where: { isVisible: true }, select, orderBy });
-    return rows.map((row) => ({ id: row.id, name: row.name, slug: row.slug, count: row._count.products }));
-  } catch { return []; }
-}
 
 const icon = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true } as const;
 
 export async function Header() {
-  const session = await currentSession();
+  const jar = await cookies();
+  // One request: who is signed in, the cart count, the category menu and the top bar text.
+  const { session, count, categories, announcement } = await pageData("header", { token: jar.get("session")?.value, guest: jar.get("guest_cart")?.value });
   const staff = session ? ["SUPER_ADMIN", "ADMIN", "PRODUCT_MANAGER", "ORDER_MANAGER"].includes(session.role) : false;
-  const [count, categories, announcement] = await Promise.all([headerCartCount(session?.sub), menuCategories(), getAnnouncement()]);
   // Repeat short lists so the sliding strip always fills the screen; two identical copies make the loop seamless.
   const reps = Math.max(1, Math.ceil(8 / announcement.messages.length));
   const track = Array.from({ length: reps }, () => announcement.messages).flat();
