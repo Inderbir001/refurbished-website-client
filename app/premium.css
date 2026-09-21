@@ -311,3 +311,9 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
   .filter-form > button, .filter-form > .price-filter, .filter-form > label:has(input[type="checkbox"]) { grid-column: 1 / -1; }
 }
 .listing .filter-form input[type="checkbox"] { flex: none; width: 18px; height: 18px; padding: 0; margin: 0; accent-color: var(--orange); }
+
+
+/* Desktop density: at 100% browser zoom the layout felt oversized, so render it like an 85% zoom on wide screens. Phones and tablets are untouched. */
+@media (min-width: 1200px) {
+  body { zoom: 0.85; }
+}
