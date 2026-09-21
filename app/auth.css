@@ -1,0 +1,46 @@
+/* Sign-in / sign-up: split card (colour panel + form), Flipkart-style layout in the store's colours. */
+.auth-split { padding: 40px clamp(14px, 4vw, 60px) 60px; display: grid; place-items: start center; min-height: 60vh; }
+.auth-card { width: min(100%, 880px); display: grid; grid-template-columns: 0.82fr 1.18fr; min-height: 560px; background: #fff; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 70px rgba(20, 33, 31, .14); animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+
+.auth-side { position: relative; padding: 38px 32px 26px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; color: #eff5e7; background: radial-gradient(120% 70% at 100% 0%, rgba(251, 107, 72, .38), transparent 60%), linear-gradient(160deg, #1c3833 0%, #0e1b19 100%); overflow: hidden; }
+.auth-side h1 { margin: 0 0 12px; font: 600 clamp(28px, 3.2vw, 36px)/1.1 'Playfair Display', serif; letter-spacing: -.02em; color: #fff; }
+.auth-lead { margin: 0 0 22px; font-size: 15.5px; line-height: 1.55; color: #c5d6cd; }
+.auth-perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: 14px; }
+.auth-perks li { display: flex; align-items: flex-start; gap: 10px; line-height: 1.4; }
+.auth-perks svg { flex: none; margin-top: 1px; padding: 2px; border-radius: 50%; background: var(--acid); color: var(--ink); box-sizing: content-box; }
+.auth-art { width: min(100%, 230px); align-self: center; margin-top: 4px; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .3)); }
+
+.auth-form { padding: 44px clamp(22px, 5vw, 48px) 34px; display: flex; align-items: center; }
+.auth-form form { width: 100%; display: grid; gap: 16px; }
+.auth-form h2 { margin: 0; font: 700 22px/1.2 'DM Sans', sans-serif; color: var(--ink); }
+.auth-sub { margin: -8px 0 4px; color: var(--muted); font-size: 14px; }
+.auth-label { display: grid; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.auth-label em { font-style: normal; font-weight: 400; color: var(--muted); }
+.auth-label small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.auth-input, .phone-field, .password-field { border: 1.5px solid var(--line); border-radius: 12px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.auth-input { width: 100%; padding: 13px 14px; }
+.phone-field, .password-field { display: flex; align-items: stretch; overflow: hidden; }
+.phone-field b { display: flex; align-items: center; padding: 0 12px 0 14px; border-right: 1.5px solid var(--line); font-weight: 700; color: var(--ink); background: var(--paper); }
+.phone-field input, .password-field input { flex: 1; min-width: 0; padding: 13px 14px; border: 0; border-radius: 0; background: transparent; }
+.password-field button { flex: none; padding: 0 14px; border: 0; background: transparent; color: var(--orange); font-weight: 700; font-size: 13px; cursor: pointer; }
+.auth-input:focus, .phone-field:focus-within, .password-field:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(251, 107, 72, .16); outline: 0; }
+.phone-field input:focus, .password-field input:focus { border: 0; box-shadow: none; outline: 0; }
+.auth-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; font-weight: 600; margin-top: -4px; }
+.auth-row a, .link-button { color: var(--orange); border: 0; background: none; padding: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.auth-row a:hover, .link-button:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-submit { width: 100%; padding: 15px 20px; border-radius: 12px; font-size: 15px; text-align: center; }
+.auth-foot { margin: 2px 0 0; text-align: center; font-size: 14px; color: var(--muted); }
+.auth-foot a { color: var(--orange); font-weight: 700; }
+.auth-foot a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-form .consent-note { text-align: left; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .auth-split { padding-top: 18px; }
+  .auth-card { grid-template-columns: 1fr; min-height: 0; }
+  .auth-side { padding: 24px 22px; gap: 12px; }
+  .auth-side h1 { font-size: 26px; margin-bottom: 8px; }
+  .auth-lead { margin-bottom: 0; font-size: 14.5px; }
+  .auth-perks, .auth-art { display: none; }
+  .auth-form { padding: 26px 20px 28px; }
+}

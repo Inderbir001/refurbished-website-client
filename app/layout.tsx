@@ -11,6 +11,7 @@ import "./offers-admin.css";
 import "./storefront-admin.css";
 import "./premium.css";
 import "./content-pages.css";
+import "./auth.css";
 import { Header } from "@/components/store/header";
 import { brand } from "@/lib/brand";
 import { Footer } from "@/components/store/footer";
