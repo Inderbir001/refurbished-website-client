@@ -15,6 +15,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "22"
+      - key: API_ONLY              # "true": this host serves only /api/*; page requests redirect to NEXT_PUBLIC_APP_URL
+        value: "true"
       - key: DATABASE_URL          # Supabase transaction pooler (port 6543) + ?pgbouncer=true&connection_limit=5
         sync: false
       - key: AUTH_SECRET
