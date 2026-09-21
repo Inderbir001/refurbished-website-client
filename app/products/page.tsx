@@ -3,8 +3,17 @@ import { listProducts, ProductFilters } from "@/lib/catalog";
 import { db } from "@/lib/db";
 import { FiltersToggle } from "@/components/store/filters-toggle";
 
+import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 type Search = { q?: string; category?: string; brand?: string; condition?: string; min?: string; max?: string; availability?: string; storage?: string; ram?: string; color?: string; rating?: string; sort?: string };
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<Search> }): Promise<Metadata> {
+  const params = await searchParams;
+  if (params.q) return { title: `Results for “${params.q.slice(0, 60)}”`, robots: { index: false, follow: true } };
+  if (params.condition === "REFURBISHED") return { title: "Refurbished deals", description: "Certified refurbished phones and electronics with warranty." };
+  if (params.condition === "USED") return { title: "Pre-owned devices", description: "Tested and graded pre-owned phones and electronics." };
+  return { title: "All products", description: "Browse new, certified refurbished and pre-owned phones and electronics." };
+}
 
 export default async function Products({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;

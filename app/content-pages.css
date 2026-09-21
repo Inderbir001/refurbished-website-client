@@ -6,7 +6,7 @@
 @keyframes dealPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 106, 61, .55); } 70%, 100% { box-shadow: 0 0 0 8px rgba(255, 106, 61, 0); } }
 
 /* ===== Policy pages ===== */
-.policy-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(24px, 5vw, 72px); max-width: 1180px; margin: 0 auto; align-items: start; padding-top: 56px; }
+.policy-shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: clamp(24px, 5vw, 72px); max-width: none; margin: 0; align-items: start; padding-top: 48px; }
 .policy-list { position: sticky; top: 140px; display: grid; gap: 4px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
 .policy-list .eyebrow { margin: 0 0 8px; padding: 0 10px; }
 .policy-list a { padding: 10px 12px; border-radius: 10px; font-size: 14px; color: var(--muted); transition: background .2s, color .2s, transform .25s var(--ease); }

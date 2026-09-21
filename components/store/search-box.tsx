@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { brand } from "@/lib/brand";
 
@@ -9,13 +9,15 @@ const recentKey = `${brand.fileSlug}_recent_searches`;
 
 export function SearchBox({ defaultValue = "", variant = "page" }: { defaultValue?: string; variant?: "page" | "header" }) {
   const params = useSearchParams();
+  const pathname = usePathname();
   const urlQuery = variant === "header" ? params.get("q") ?? "" : defaultValue;
   const [query, setQuery] = useState(urlQuery);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => { setQuery(urlQuery); }, [urlQuery]);
+  // The header stays mounted across pages: show the current search (or nothing) after every navigation.
+  useEffect(() => { setQuery(urlQuery); }, [urlQuery, pathname]);
   useEffect(() => {
     try { setRecent(JSON.parse(localStorage.getItem(recentKey) ?? "[]")); } catch { setRecent([]); }
   }, []);
@@ -49,7 +51,7 @@ export function SearchBox({ defaultValue = "", variant = "page" }: { defaultValu
       {showPanel && (
         <div className="search-suggestions" onMouseDown={(event) => event.preventDefault()}>
           {showRecent && recent.map((item) => <Link key={item} href={`/products?q=${encodeURIComponent(item)}`} onClick={() => setOpen(false)}><small>Recent</small>{item}</Link>)}
-          {suggestions.map((item) => <Link key={`${item.type}:${item.href}`} href={item.href} onClick={() => setOpen(false)}><small>{item.type}</small>{item.label}</Link>)}
+          {suggestions.map((item) => <Link key={`${item.type}:${item.href}`} href={item.href} onClick={() => { setOpen(false); setQuery(""); }}><small>{item.type}</small>{item.label}</Link>)}
         </div>
       )}
     </div>

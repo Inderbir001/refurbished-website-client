@@ -1,15 +1,65 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ProductPicker } from "@/components/admin/product-picker";
 
 function useSubmit() { const router = useRouter(); const [message, setMessage] = useState(""); async function send(url: string, method: string, body: unknown) { const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const result = await response.json(); setMessage(response.ok ? "Saved successfully." : result.error ?? "Could not save."); if (response.ok) router.refresh(); return response.ok; } return { send, message }; }
 const bool = (value: FormDataEntryValue | null) => value === "on";
 const paise = (value: FormDataEntryValue | null) => value ? Math.round(Number(value) * 100) : undefined;
 
-export function CatalogCreateForm({ entity, categories = [], products = [] }: { entity: "categories" | "brands" | "collections"; categories?: { id: string; name: string }[]; products?: { id: string; name: string }[] }) { const { send, message } = useSubmit(); async function save(form: FormData) { const base = { name: form.get("name"), slug: form.get("slug"), description: form.get("description") || undefined, imageUrl: form.get("imageUrl") || undefined, seoTitle: form.get("seoTitle") || undefined, seoDescription: form.get("seoDescription") || undefined }; const body = entity === "categories" ? { ...base, parentId: form.get("parentId") || undefined, position: Number(form.get("position")), isVisible: true } : entity === "brands" ? { ...base, logoUrl: form.get("imageUrl") || undefined, isActive: true } : { ...base, isActive: true, productIds: form.getAll("productIds") }; await send(`/api/admin/catalog/${entity}`, "POST", body); } return <form action={save} className="inline-admin-form"><h3>Create {entity.slice(0, -1)}</h3><div className="form-columns"><label>Name<input name="name" required /></label><label>Slug<input name="slug" pattern="[a-z0-9-]+" required /></label><label>Image URL<input name="imageUrl" type="url" /></label></div><label>Description<textarea name="description" /></label>{entity === "categories" && <div className="form-columns"><label>Parent<select name="parentId"><option value="">Top level</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>Position<input name="position" type="number" min="0" defaultValue="0" /></label></div>}{entity === "collections" && <label>Products<select name="productIds" multiple size={6}>{products.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}<div className="form-columns"><label>SEO title<input name="seoTitle" /></label><label>SEO description<input name="seoDescription" /></label></div><button className="primary-button">Create</button>{message && <small>{message}</small>}</form>; }
+const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const singular = { categories: "category", brands: "brand", collections: "collection" } as const;
+
+type Fields = { entity: "categories" | "brands" | "collections"; categories?: { id: string; name: string }[]; products?: { id: string; name: string }[] };
+function CatalogFields({ entity, categories = [], products = [], value, ownId, formKey }: Fields & { value?: CatalogValue; ownId?: string; formKey: string }) {
+  const kind = singular[entity];
+  return <div className="ed-grid">
+    <label>Name<input name="name" required defaultValue={value?.name} placeholder={`e.g. ${entity === "collections" ? "Best Sellers" : entity === "brands" ? "Samsung" : "Earphones"}`} /><small>Shown to customers on the store.</small></label>
+    <label>Web address<input name="slug" required pattern="[a-z0-9-]+" defaultValue={value?.slug} placeholder="best-sellers" /><small>Letters, numbers and dashes only. Part of the page link.</small></label>
+    <label className="wide">Description<textarea name="description" defaultValue={value?.description ?? ""} placeholder={`A short line about this ${kind}.`} /></label>
+    <label className="wide">Picture link (optional)<input name="imageUrl" type="url" defaultValue={value?.imageUrl ?? ""} placeholder="https://…" /><small>Paste the link of an image, or leave empty.</small></label>
+    {entity === "categories" && <>
+      <label>Parent category<select name="parentId" defaultValue={value?.parentId ?? ""}><option value="">Top level</option>{categories.filter((item) => item.id !== ownId).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      <label>Position in the menu<input name="position" type="number" min="0" defaultValue={value?.position ?? 0} /><small>Smaller numbers come first.</small></label>
+    </>}
+    {entity === "collections" && <div className="wide"><b style={{ fontSize: 13 }}>Products in this collection</b><ProductPicker key={formKey} products={products} selected={value?.productIds ?? []} /></div>}
+    <label>Search title (optional)<input name="seoTitle" defaultValue={value?.seoTitle ?? ""} /><small>What Google shows as the page title.</small></label>
+    <label>Search description (optional)<input name="seoDescription" defaultValue={value?.seoDescription ?? ""} /><small>The short text under the title in Google.</small></label>
+  </div>;
+}
+
+export function CatalogCreateForm({ entity, categories = [], products = [] }: Fields) {
+  const { send, message } = useSubmit();
+  const [formKey, setFormKey] = useState(0);
+  async function save(form: FormData) {
+    const base = { name: form.get("name"), slug: form.get("slug"), description: form.get("description") || undefined, imageUrl: form.get("imageUrl") || undefined, seoTitle: form.get("seoTitle") || undefined, seoDescription: form.get("seoDescription") || undefined };
+    const body = entity === "categories" ? { ...base, parentId: form.get("parentId") || undefined, position: Number(form.get("position")), isVisible: true } : entity === "brands" ? { ...base, logoUrl: form.get("imageUrl") || undefined, isActive: true } : { ...base, isActive: true, productIds: form.getAll("productIds") };
+    return send(`/api/admin/catalog/${entity}`, "POST", body);
+  }
+  return <form onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; if (await save(new FormData(form))) { form.reset(); setFormKey((key) => key + 1); } }} className="inline-admin-form" key={formKey}>
+    <h3>Add a {singular[entity]}</h3>
+    <CatalogFields entity={entity} categories={categories} products={products} formKey={String(formKey)} />
+    <div className="ed-actions"><button className="primary-button">Create {singular[entity]}</button>{message && <small>{message}</small>}</div>
+  </form>;
+}
 
 type CatalogValue = { id: string; name: string; slug: string; description?: string | null; imageUrl?: string | null; seoTitle?: string | null; seoDescription?: string | null; parentId?: string | null; position?: number; isVisible?: boolean; isActive?: boolean; productIds?: string[] };
-export function CatalogRowEditor({ entity, value, categories = [], products = [] }: { entity: "categories" | "brands" | "collections"; value: CatalogValue; categories?: { id: string; name: string }[]; products?: { id: string; name: string }[] }) { const { send, message } = useSubmit(); async function save(form: FormData) { const common = { id: value.id, name: form.get("name"), slug: form.get("slug"), description: form.get("description") || undefined, imageUrl: form.get("imageUrl") || undefined, seoTitle: form.get("seoTitle") || undefined, seoDescription: form.get("seoDescription") || undefined }; const body = entity === "categories" ? { ...common, parentId: form.get("parentId") || undefined, position: Number(form.get("position")), isVisible: bool(form.get("enabled")) } : entity === "brands" ? { ...common, logoUrl: form.get("imageUrl") || undefined, isActive: bool(form.get("enabled")) } : { ...common, isActive: bool(form.get("enabled")), productIds: form.getAll("productIds") }; await send(`/api/admin/catalog/${entity}`, "PATCH", body); } async function remove() { if (!confirm(`Delete ${value.name}?`)) return; await send(`/api/admin/catalog/${entity}?id=${value.id}`, "DELETE", {}); } return <details className="row-editor"><summary>Manage</summary><form action={save}><input name="name" defaultValue={value.name}/><input name="slug" defaultValue={value.slug}/><input name="description" defaultValue={value.description ?? ""}/><input name="imageUrl" type="url" defaultValue={value.imageUrl ?? ""}/>{entity === "categories" && <><select name="parentId" defaultValue={value.parentId ?? ""}><option value="">Top level</option>{categories.filter((item) => item.id !== value.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select><input name="position" type="number" min="0" defaultValue={value.position ?? 0}/></>}{entity === "collections" && <select name="productIds" multiple size={5} defaultValue={value.productIds}>{products.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>}<input name="seoTitle" defaultValue={value.seoTitle ?? ""}/><input name="seoDescription" defaultValue={value.seoDescription ?? ""}/><label><input name="enabled" type="checkbox" defaultChecked={entity === "categories" ? value.isVisible : value.isActive}/> Visible/active</label><button className="secondary-button">Save</button><button type="button" className="danger-button" onClick={remove}>Delete</button></form>{message && <small>{message}</small>}</details>; }
+export function CatalogRowEditor({ entity, value, categories = [], products = [] }: { entity: "categories" | "brands" | "collections"; value: CatalogValue; categories?: { id: string; name: string }[]; products?: { id: string; name: string }[] }) {
+  const { send, message } = useSubmit();
+  async function save(form: FormData) {
+    const common = { id: value.id, name: form.get("name"), slug: form.get("slug"), description: form.get("description") || undefined, imageUrl: form.get("imageUrl") || undefined, seoTitle: form.get("seoTitle") || undefined, seoDescription: form.get("seoDescription") || undefined };
+    const body = entity === "categories" ? { ...common, parentId: form.get("parentId") || undefined, position: Number(form.get("position")), isVisible: bool(form.get("enabled")) } : entity === "brands" ? { ...common, logoUrl: form.get("imageUrl") || undefined, isActive: bool(form.get("enabled")) } : { ...common, isActive: bool(form.get("enabled")), productIds: form.getAll("productIds") };
+    await send(`/api/admin/catalog/${entity}`, "PATCH", body);
+  }
+  async function remove() { if (!confirm(`Delete "${value.name}"? This cannot be undone.`)) return; await send(`/api/admin/catalog/${entity}?id=${value.id}`, "DELETE", {}); }
+  return <details className="row-editor"><summary>Edit</summary>
+    <form onSubmit={(event) => { event.preventDefault(); void save(new FormData(event.currentTarget)); }}>
+      <CatalogFields entity={entity} categories={categories} products={products} value={value} ownId={value.id} formKey={value.id} />
+      <label className="ed-switch"><input name="enabled" type="checkbox" defaultChecked={entity === "categories" ? value.isVisible : value.isActive} /> Show on the store</label>
+      <div className="ed-actions"><button className="primary-button">Save changes</button><button type="button" className="danger-button" onClick={remove}>Delete {singular[entity]}</button>{message && <small aria-live="polite">{message}</small>}</div>
+    </form>
+  </details>;
+}
 
 export function InventoryAdjustForm({ variants }: { variants: { id: string; label: string }[] }) { const { send, message } = useSubmit(); async function save(form: FormData) { await send("/api/admin/inventory", "POST", { variantId: form.get("variantId"), delta: Number(form.get("delta")), note: form.get("note") }); } return <form action={save} className="inline-admin-form"><h3>Adjust inventory</h3><div className="form-columns"><label>Variant<select name="variantId">{variants.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label><label>Change (+/−)<input name="delta" type="number" required /></label><label>Reason<input name="note" required minLength={3} /></label></div><button className="primary-button">Record adjustment</button>{message && <small>{message}</small>}</form>; }
 

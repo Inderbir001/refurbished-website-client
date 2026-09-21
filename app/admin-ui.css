@@ -1,5 +1,5 @@
 /* ===== Admin frame: sidebar + content ===== */
-.admin-root { min-height: 100vh; background: transparent; }
+.admin-root { min-height: var(--vh, 100vh); background: transparent; }
 .admin-topbar { position: sticky; top: 0; z-index: 60; height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 clamp(14px, 2.4vw, 28px); background: rgba(255, 255, 255, .92); backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px); border-bottom: 1px solid var(--line); box-shadow: 0 6px 20px rgba(14, 27, 25, .05); }
 .admin-topbar-left, .admin-topbar-right { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .admin-topbar .wordmark { font-size: 22px; white-space: nowrap; }
@@ -12,8 +12,8 @@
 .admin-signout { padding: 10px 18px; border: 0; border-radius: 999px; background: var(--grad-orange); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 6px 16px rgba(255, 106, 61, .35); transition: transform .25s var(--ease), box-shadow .25s; white-space: nowrap; }
 .admin-signout:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(255, 106, 61, .45); }
 .admin-signout:disabled { opacity: .6; }
-.admin-frame { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: calc(100vh - 64px); align-items: start; }
-.admin-side { position: sticky; top: 64px; height: calc(100vh - 64px); overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 6px; padding: 22px 14px 24px; background: linear-gradient(180deg, #0e1b19 0%, #0a1413 100%); color: #d5e0db; }
+.admin-frame { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: calc(var(--vh, 100vh) - 64px); align-items: start; }
+.admin-side { position: sticky; top: 64px; height: calc(var(--vh, 100vh) - 64px); overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 6px; padding: 22px 14px 24px; background: linear-gradient(180deg, #0e1b19 0%, #0a1413 100%); color: #d5e0db; }
 .admin-side::-webkit-scrollbar { display: none; }
 .admin-groups { display: grid; gap: 18px; flex: 1; }
 .admin-group { display: grid; gap: 2px; }
@@ -175,3 +175,70 @@
   .admin-topbar .wordmark { font-size: 19px; }
   .admin-viewstore { padding: 8px 12px; }
 }
+
+/* ================= round of QA fixes ================= */
+/* back link no longer runs into the small label under it */
+.admin-page > .text-link, .admin-main > .text-link { display: inline-block; margin-bottom: 16px; line-height: 1.3; }
+.admin-page > .eyebrow { margin-top: 0; }
+
+/* buttons inside action rows / inline forms: the generic ".row-actions button" white style used to swallow primary buttons */
+.row-actions .primary-button, .inline-admin-form .primary-button { background: var(--grad-ink); color: #fff; border: 0; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.row-actions .primary-button:hover, .inline-admin-form .primary-button:hover { background: var(--grad-orange); }
+.row-actions .secondary-button { padding: 11px 20px; border-radius: 12px; font-weight: 600; }
+
+/* products: catalog tools + tidy form */
+.catalog-tools { display: grid; gap: 18px; }
+.catalog-tools .tool-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.catalog-tools .tool-row .secondary-button { padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.catalog-tools .import-box { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; padding: 16px 18px; border: 1.5px dashed var(--line); border-radius: 14px; background: var(--paper); }
+.import-box .import-text { flex: 1 1 260px; display: grid; gap: 3px; }
+.import-box .import-text small { color: var(--muted); line-height: 1.45; }
+.import-box input[type="file"] { flex: 1 1 220px; min-width: 0; font-size: 13px; color: var(--muted); }
+.import-box input[type="file"]::file-selector-button { margin-right: 12px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-weight: 600; cursor: pointer; }
+.import-box .primary-button { padding: 11px 20px; border-radius: 12px; }
+.product-form fieldset { border: 0; padding: 0; margin: 0 0 6px; display: grid; gap: 14px; min-width: 0; }
+.product-form legend { padding: 0 0 8px; font: 600 11px 'DM Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.product-form fieldset + fieldset { padding-top: 16px; border-top: 1px solid var(--line); }
+.product-form small.hint { color: var(--muted); font-weight: 400; font-size: 12px; }
+.product-form input, .product-form select, .product-form textarea { border-radius: 12px; }
+.catalog-search { display: flex; gap: 8px; margin: 0 0 12px; }
+.catalog-search input { flex: 1; min-width: 0; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; }
+.catalog-search button, .catalog-search a { flex: none; padding: 11px 16px; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-weight: 600; cursor: pointer; }
+.catalog-note { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+
+/* collections / categories / brands: labelled editor + product picker */
+.row-editor summary { display: inline-block; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font-weight: 600; font-size: 13px; cursor: pointer; list-style: none; }
+.row-editor summary::-webkit-details-marker { display: none; }
+.row-editor[open] summary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.row-editor form { display: grid; gap: 14px; min-width: min(560px, 80vw); padding: 16px 0 4px; }
+.ed-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ed-grid .wide { grid-column: 1 / -1; }
+.ed-grid label, .inline-admin-form .ed-grid label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.ed-grid label small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.ed-grid input, .ed-grid select, .ed-grid textarea { padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; font: inherit; width: 100%; }
+.ed-grid textarea { min-height: 76px; resize: vertical; }
+.ed-switch { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.ed-switch input { width: 18px; height: 18px; accent-color: var(--orange); }
+.ed-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ed-actions .primary-button { padding: 12px 24px; border: 0; border-radius: 12px; background: var(--grad-ink); color: #fff; font-weight: 700; cursor: pointer; }
+.ed-actions .primary-button:hover { background: var(--grad-orange); }
+.ed-actions .danger-button { padding: 11px 18px; border-radius: 12px; border: 1px solid #f0c9c0; background: #fff5f2; color: #a22b18; font-weight: 600; cursor: pointer; }
+.ed-actions small { color: var(--muted); }
+.picker { display: grid; gap: 8px; border: 1.5px solid var(--line); border-radius: 14px; padding: 12px; background: #fff; }
+.picker-head { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker-head input[type="search"] { flex: 1 1 200px; min-width: 0; padding: 9px 12px; border: 1.5px solid var(--line); border-radius: 10px; }
+.picker-head button { padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); font-weight: 600; font-size: 13px; cursor: pointer; }
+.picker-head button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.picker-list { max-height: 240px; overflow-y: auto; display: grid; gap: 2px; }
+.picker-list label { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; font-weight: 500; cursor: pointer; }
+.picker-list label:hover { background: var(--paper); }
+.picker-list input { width: 17px; height: 17px; accent-color: var(--orange); flex: none; }
+.picker-count { color: var(--muted); font-size: 12.5px; }
+@media (max-width: 720px) { .ed-grid { grid-template-columns: 1fr; } .row-editor form { min-width: 0; } }
+/* editors inside tables get room, and rows line up at the top */
+.admin-page table td, .admin-page table th { vertical-align: top; }
+.admin-page table:has(.row-editor) td:last-child { width: 62%; }
+.admin-page table:has(.row-editor) td:not(:last-child) { padding-top: 22px; }
+.ed-grid .picker-list label, .inline-admin-form .ed-grid .picker-list label { display: flex; flex-direction: row; align-items: center; gap: 10px; font-weight: 500; }
+.ed-grid .picker-list input, .inline-admin-form .ed-grid .picker-list input { width: 17px; height: 17px; padding: 0; border-radius: 4px; }
+.ed-grid .picker-head input[type="search"] { width: auto; }

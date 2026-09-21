@@ -1,0 +1,273 @@
+﻿ID,Module,Priority,Test case,Preconditions,Steps,Expected result,Device / browser,Status,Tester,Date tested,Bug / Trello link,Notes
+ENV-001,01 Deployment & environment,P0,Live site opens over HTTPS,None,"1. Open the site address in a browser
+2. Check the padlock in the address bar",Home page loads with no security warning; http:// redirects to https://,Desktop Chrome,Not run,,,,
+ENV-002,01 Deployment & environment,P0,Backend (Render) is healthy,None,1. Open <render-url>/api/health,"Returns {""status"":""ok""} within a few seconds",Desktop Chrome,Not run,,,,
+ENV-003,01 Deployment & environment,P0,Render address does not show the store,None,1. Open <render-url>/ and <render-url>/products,Redirects to the public site (only /api/* stays on Render),Desktop Chrome,Not run,,,,
+ENV-004,01 Deployment & environment,P0,Private endpoints are not public,None,1. Send POST to <site>/api/internal/db and <render-url>/api/internal/db without the secret,Both return 404; nothing is exposed,Desktop Chrome,Not run,,,,
+ENV-005,01 Deployment & environment,P1,First request after idle (Render cold start),Backend idle 20+ min with keep-alive job paused,"1. Open the site
+2. Add a product to the cart","Page loads within ~60s, no error page; later requests are fast",Desktop Chrome,Not run,,,,
+ENV-006,01 Deployment & environment,P1,Keep-alive cron job runs,cron-job.org account,"1. Open the Keep alive job history
+2. Check the last 5 runs","All runs 200 OK, every 10 min",Desktop Chrome,Not run,,,,
+ENV-007,01 Deployment & environment,P1,Release-reservations cron job,cron-job.org,1. Open the job history,"Runs every 10 min, 200 OK (401 means the Bearer secret is wrong)",Desktop Chrome,Not run,,,,
+ENV-008,01 Deployment & environment,P1,Reconcile-payments cron job,cron-job.org,1. Open the job history,"Runs every 10 min, 200 OK",Desktop Chrome,Not run,,,,
+ENV-009,01 Deployment & environment,P1,Notification dispatch cron job,cron-job.org,1. Open the job history,"Runs every 5 min, 200 OK",Desktop Chrome,Not run,,,,
+ENV-010,01 Deployment & environment,P0,Razorpay webhook configured,Razorpay dashboard access,"1. Open Webhooks
+2. Check URL and events",URL = <render-url>/api/payments/webhook/razorpay; only payment.captured and payment.failed selected,Desktop Chrome,Not run,,,,
+ENV-011,01 Deployment & environment,P1,Environment variables present,Vercel + Render dashboards,1. Compare with docs/DEPLOYMENT.md table,"Vercel: BACKEND_URL, INTERNAL_API_SECRET, NEXT_PUBLIC_APP_URL. Render: DATABASE_URL, AUTH_SECRET, CRON_SECRET, RAZORPAY_*, INTERNAL_API_SECRET, API_ONLY=true",Desktop Chrome,Not run,,,,
+ENV-012,01 Deployment & environment,P1,Custom domain (when connected),mobilenmore.online pointed to Vercel,1. Open https://mobilenmore.online and https://www.mobilenmore.online,Both load the site with valid HTTPS; www redirects to the main address; NEXT_PUBLIC_APP_URL updated on Vercel and Render,Desktop Chrome,Not run,,,,
+ENV-013,01 Deployment & environment,P2,Database backups,Supabase dashboard,1. Check the backups / point-in-time recovery page,Backups are enabled; owner knows how to restore,Desktop Chrome,Not run,,,,
+NAV-001,"02 Header, categories & search",P0,Header shows on every page,None,"1. Open Home, Products, a product, Cart, Login, a policy page","Announcement bar, logo, search, Shop all, Home, Sign in/Account, Cart and the category strip are present on all",Desktop Chrome,Not run,,,,
+NAV-002,"02 Header, categories & search",P1,Logo goes home,On any inner page,1. Click the Mobile & More logo,Goes to the home page,Desktop Chrome,Not run,,,,
+NAV-003,"02 Header, categories & search",P1,Home button,On any inner page,1. Click Home,Goes to the home page,Desktop Chrome,Not run,,,,
+NAV-004,"02 Header, categories & search",P0,Search returns results,Products exist,"1. Type 'phone' in the search box
+2. Press Enter",Listing page with matching products; heading shows the search,Desktop Chrome,Not run,,,,
+NAV-005,"02 Header, categories & search",P1,Search suggestions,None,1. Type 2-3 letters slowly,Suggestions dropdown shows matching products/categories; click one opens it,Desktop Chrome,Not run,,,,
+NAV-006,"02 Header, categories & search",P1,Search with no result,None,1. Search for 'zzzzqqq',"Friendly 'no products' message, no error",Desktop Chrome,Not run,,,,
+NAV-007,"02 Header, categories & search",P1,Search misspelling is not shared between visitors,Two different browsers/devices,"1. On device A search 'moooobile'
+2. On device B open the search box / suggestions",Device B does NOT see device A's search as a popular/suggested term,Desktop Chrome,Not run,,,,
+NAV-008,"02 Header, categories & search",P2,Search special characters,None,1. Search for <script>alert(1)</script> and for % and ',"No script runs, no error; results page renders safely",Desktop Chrome,Not run,,,,
+NAV-009,"02 Header, categories & search",P1,Shop all button,None,1. Click Shop all,Opens the full product listing,Desktop Chrome,Not run,,,,
+NAV-010,"02 Header, categories & search",P0,Category strip links,None,1. Click each category in the strip,Each opens its category listing; the clicked category is highlighted (and 'Refurbished deals' is NOT highlighted on a normal category),Desktop Chrome,Not run,,,,
+NAV-011,"02 Header, categories & search",P1,Category strip highlight on Refurbished deals,None,1. Open the Refurbished deals link,Only Refurbished deals is highlighted,Desktop Chrome,Not run,,,,
+NAV-012,"02 Header, categories & search",P1,All categories menu (desktop),None,1. Click All categories,Menu lists every category with product counts and a 'Browse the full catalog' link; closes on outside click / Esc,Desktop Chrome,Not run,,,,
+NAV-013,"02 Header, categories & search",P0,All categories menu (phone) locks background scroll,Phone,"1. Open All categories
+2. Try to scroll the page behind",Menu opens as a bottom sheet; the page behind does not scroll; closing restores scrolling,Phone Chrome/Safari,Not run,,,,
+NAV-014,"02 Header, categories & search",P1,Cart badge count,None,1. Add 2 different items to the cart,Badge shows 2 immediately; updates on remove; no badge when the cart is empty,Desktop Chrome,Not run,,,,
+NAV-015,"02 Header, categories & search",P1,Account/Sign-in link,Signed out / signed in,1. Look at the header in both states,Signed out shows Sign in; signed in shows Account (and Wishlist); admin sees an Admin link,Desktop Chrome,Not run,,,,
+NAV-016,"02 Header, categories & search",P2,Announcement bar scrolls,None,1. Watch the top bar 10 seconds,Messages scroll smoothly and loop; readable on phone,Desktop Chrome,Not run,,,,
+HOME-001,03 Home page & content,P0,Home page loads with live offers,Products with sale prices exist,1. Open the home page,"Hero shows 'Up to X% off', featured offer cards with price and struck-out old price, no broken images",Desktop Chrome,Not run,,,,
+HOME-002,03 Home page & content,P1,Hero buttons,None,1. Click Shop all deals and Refurbished,Each opens the correct listing,Desktop Chrome,Not run,,,,
+HOME-003,03 Home page & content,P1,Hero numbers are correct,None,1. Compare 'products on offer' and the % with the offers in Admin,Numbers match the real active offers,Desktop Chrome,Not run,,,,
+HOME-004,03 Home page & content,P1,Coupon strip,Active coupons,"1. Look at the coupon cards
+2. Click a coupon code",Codes match Admin → Offers; clicking copies the code (confirmation shown); expired/paused coupons are not shown,Desktop Chrome,Not run,,,,
+HOME-005,03 Home page & content,P1,Shop by budget,None,1. Click each 'Under ₹…' card,Opens the listing filtered to that price; product counts on the cards are right,Desktop Chrome,Not run,,,,
+HOME-006,03 Home page & content,P1,Category / brand sections,None,1. Click a category card and a brand,Correct filtered listing opens,Desktop Chrome,Not run,,,,
+HOME-007,03 Home page & content,P2,Homepage sections toggle,Admin access,"1. In Admin → Homepage switch a section off
+2. Refresh the home page",Section disappears; switching it on brings it back,Desktop Chrome,Not run,,,,
+HOME-008,03 Home page & content,P1,Banner shows and can be hidden,A banner exists,"1. Admin → Homepage → hide the banner
+2. Refresh the home page
+3. Show it again",Banner disappears then reappears; no error (no 'invalid cuid'),Desktop Chrome,Not run,,,,
+HOME-009,03 Home page & content,P2,Animations,None,1. Scroll the home page,"Sections fade/slide in smoothly; no flicker, no layout jump; 'reduce motion' setting disables them",Desktop Chrome,Not run,,,,
+HOME-010,03 Home page & content,P1,Announcement text edit,Admin access,"1. Admin → Homepage → edit top-bar messages, save
+2. Refresh the site",New messages scroll in the bar; empty list falls back to the defaults,Desktop Chrome,Not run,,,,
+HOME-011,03 Home page & content,P1,Page density at 100% zoom,Desktop 1440px+,1. Open the site at 100% browser zoom,Layout looks balanced (same as ~85% before); nothing cut off or overlapping,Desktop Chrome/Edge/Firefox,Not run,,,,
+HOME-012,03 Home page & content,P1,Footer sits at the bottom,Tall window / Mac,"1. Open the cart when empty, Login, a policy page on a tall window",Footer touches the bottom of the window; no blank white strip below it,Mac Chrome/Safari,Not run,,,,
+HOME-013,03 Home page & content,P2,Footer links,None,1. Click every footer link,All open the correct page; no 404,Desktop Chrome,Not run,,,,
+LST-001,04 Product listing & filters,P0,All products list,None,1. Open Shop all,"Grid of active products with image, name, price, badge; count is right",Desktop Chrome,Not run,,,,
+LST-002,04 Product listing & filters,P0,Product card layout is responsive,None,1. Resize from desktop to phone width,"Cards resize evenly (4→3→2 columns), text not cut off, images not stretched",Desktop + Phone,Not run,,,,
+LST-003,04 Product listing & filters,P1,Filter by price / condition / brand,None,"1. Use each filter, then Apply filters",Only matching products; Apply filters button has normal width; checkboxes aligned,Desktop Chrome,Not run,,,,
+LST-004,04 Product listing & filters,P1,Filters on phone,Phone,"1. Open the filter toggle
+2. Apply",Filters open as a panel; Apply works; result count updates,Phone,Not run,,,,
+LST-005,04 Product listing & filters,P1,Sorting,None,"1. Sort by price low→high, high→low, newest",Order is correct each time,Desktop Chrome,Not run,,,,
+LST-006,04 Product listing & filters,P2,Pagination / long lists,30+ products,1. Scroll / go to next page,All products reachable; no duplicates,Desktop Chrome,Not run,,,,
+LST-007,04 Product listing & filters,P1,Sale price shown,A product on sale,1. Look at its card,"Discount badge, sale price and struck-out original price are correct",Desktop Chrome,Not run,,,,
+LST-008,04 Product listing & filters,P1,Out-of-stock product,A product with 0 stock,1. Open it in the listing,Shows Sold out; Add to cart disabled,Desktop Chrome,Not run,,,,
+LST-009,04 Product listing & filters,P2,Empty category,A category with no products,1. Open it,"Friendly empty state, not an error",Desktop Chrome,Not run,,,,
+LST-010,04 Product listing & filters,P1,Save/wishlist heart on card,Signed in,1. Click the save button on a card,Product is added; shows in Account → Wishlist; click again removes,Desktop Chrome,Not run,,,,
+PDP-001,05 Product page,P0,Product details render,None,1. Open any product,"Images, name, price, condition/grade, warranty, availability, specifications, what's included, description all show",Desktop Chrome,Not run,,,,
+PDP-002,05 Product page,P1,Image gallery,Product with several photos,1. Click thumbnails,Main image changes; no broken images,Desktop Chrome,Not run,,,,
+PDP-003,05 Product page,P0,Variant selection and stock,Product with variants,"1. Pick each variant
+2. Try quantity above stock",Price/stock follow the variant; cannot add more than available (clear message),Desktop Chrome,Not run,,,,
+PDP-004,05 Product page,P0,Add to cart from product page,None,1. Click Add to cart,Button shows added state; badge increases; item is in the cart,Desktop Chrome,Not run,,,,
+PDP-005,05 Product page,P1,Reviews are visible,Product with an approved review,1. Scroll to Customer reviews,Approved reviews with stars and name show; average rating at the top matches,Desktop Chrome,Not run,,,,
+PDP-006,05 Product page,P0,Review form only for buyers,Signed out / signed in without a delivered order,1. Open a product and scroll to reviews,No form; note says only customers who bought and received it can review,Desktop Chrome,Not run,,,,
+PDP-007,05 Product page,P0,Buyer can write a review,"Signed in customer with a DELIVERED, paid order for that product","1. Open the product
+2. Submit a rating and 10+ characters",Success message 'sent for moderation'; not public until approved in Admin → Reviews,Desktop Chrome,Not run,,,,
+PDP-008,05 Product page,P1,Review validation,Eligible buyer,1. Submit under 10 characters,Clear error; nothing saved,Desktop Chrome,Not run,,,,
+PDP-009,05 Product page,P1,Sensitive data hidden,None,1. View page source / product page,IMEI or serial numbers are never shown,Desktop Chrome,Not run,,,,
+PDP-010,05 Product page,P2,SEO on product page,None,1. View source,"Unique <title>, description, canonical, product structured data with the right price",Desktop Chrome,Not run,,,,
+PDP-011,05 Product page,P2,Unknown product address,None,1. Open /products/does-not-exist,Proper 'not found' page,Desktop Chrome,Not run,,,,
+CRT-001,06 Cart,P0,Guest can add to cart,Signed out,1. Add a product,Cart contains it; badge updates; works after a page refresh,Desktop Chrome,Not run,,,,
+CRT-002,06 Cart,P0,Change quantity and remove,Item in cart,1. Click + then - then Remove,Totals update each time; removing the last item shows the empty cart message,Desktop Chrome,Not run,,,,
+CRT-003,06 Cart,P0,Totals are correct,2 items,"1. Compare subtotal, GST, delivery, total with prices","Math matches (GST inclusive as configured, delivery free over ₹499 or per shipping rules)",Desktop Chrome,Not run,,,,
+CRT-004,06 Cart,P0,Apply a valid coupon,"Active coupon, cart above its minimum","1. Enter the code
+2. Apply","Discount line appears, total drops; coupon box is neat (input and Apply button joined)",Desktop Chrome,Not run,,,,
+CRT-005,06 Cart,P1,Invalid / expired / below-minimum coupon,None,"1. Try a wrong code, an expired one, and one needing a higher cart value",Clear red message for each; total unchanged,Desktop Chrome,Not run,,,,
+CRT-006,06 Cart,P1,Coupon is not case sensitive,Coupon exists,1. Enter it in lower case,Applies normally,Desktop Chrome,Not run,,,,
+CRT-007,06 Cart,P1,Cart survives sign-in,"Guest with items, existing customer account","1. Add items as guest
+2. Log in","Guest items are merged into the account cart, none lost",Desktop Chrome,Not run,,,,
+CRT-008,06 Cart,P1,Cart survives close/reopen,Signed in,"1. Add items
+2. Close the browser
+3. Reopen and sign in",Cart still has the items,Desktop Chrome,Not run,,,,
+CRT-009,06 Cart,P1,Cart on two devices,Signed in on phone and laptop,"1. Add on the phone
+2. Refresh cart on the laptop",Same cart on both,Desktop Chrome,Not run,,,,
+CRT-010,06 Cart,P1,Stock changes while in cart,Item in cart,"1. Admin sets its stock to 0
+2. Open the cart / checkout",Clear message that the item is unavailable; cannot pay for it,Desktop Chrome,Not run,,,,
+CRT-011,06 Cart,P1,Empty cart page,Cart empty,1. Open /cart,Friendly message and a link to shop; footer at the bottom,Desktop Chrome,Not run,,,,
+CRT-012,06 Cart,P2,Very large quantity,None,1. Type 9999 or negative numbers via the URL/API,Rejected with a message; no crash,Desktop Chrome,Not run,,,,
+AUT-001,"07 Sign up, sign in & account access",P0,Sign up with phone only,New phone number,"1. Open Create account
+2. Enter name, phone, password; leave email empty
+3. Submit","Account created, signed in, header shows Account; no email required",Desktop Chrome,Not run,,,,
+AUT-002,"07 Sign up, sign in & account access",P0,Sign up with phone and email,New phone + email,"1. Fill all fields
+2. Submit",Account created; both saved (see Account → Profile),Desktop Chrome,Not run,,,,
+AUT-003,"07 Sign up, sign in & account access",P0,Phone number formats accepted,New numbers,"1. Type or paste 9876543210, 09876543210, +91 98765 43210",All become the same 10-digit number; letters cannot be typed,Desktop Chrome,Not run,,,,
+AUT-004,"07 Sign up, sign in & account access",P1,Invalid phone rejected,None,"1. Try 12345, 1234567890 (starts with 1), 9 digits",Field/message says enter a valid 10-digit mobile number,Desktop Chrome,Not run,,,,
+AUT-005,"07 Sign up, sign in & account access",P1,Invalid email rejected,None,1. Enter 'abc' as email,Message 'enter a valid email address or leave it empty',Desktop Chrome,Not run,,,,
+AUT-006,"07 Sign up, sign in & account access",P1,Password rules,None,"1. Try 7 characters
+2. Try 8+",Under 8 rejected with a message; 8+ accepted; Show/Hide button works,Desktop Chrome,Not run,,,,
+AUT-007,"07 Sign up, sign in & account access",P0,Duplicate phone / email blocked,Existing account,1. Sign up again with the same phone; then same email with a new phone,Message says an account already exists; asks to sign in,Desktop Chrome,Not run,,,,
+AUT-008,"07 Sign up, sign in & account access",P0,Sign in with phone + password,Account exists,1. Login page → enter phone and password,Signed in; goes to home (or back to the page you came from),Desktop Chrome,Not run,,,,
+AUT-009,"07 Sign up, sign in & account access",P0,Sign in with email (Use Email-ID),Account with email,"1. Click Use Email-ID
+2. Enter email and password",Signed in,Desktop Chrome,Not run,,,,
+AUT-010,"07 Sign up, sign in & account access",P0,Wrong password / unknown phone,None,1. Try each,"Same generic message 'Phone number, email or password is incorrect'; no hint which part is wrong",Desktop Chrome,Not run,,,,
+AUT-011,"07 Sign up, sign in & account access",P1,Login rate limit,None,1. Try 9 wrong passwords quickly,"After 8 tries a 'Too many attempts, wait' message; works again after ~15 minutes",Desktop Chrome,Not run,,,,
+AUT-012,"07 Sign up, sign in & account access",P0,Sign out,Signed in,1. Click Sign out (Account page / Admin top bar),Signed out everywhere; back button does not show account data; cart badge resets,Desktop Chrome,Not run,,,,
+AUT-013,"07 Sign up, sign in & account access",P1,Session lasts,Signed in,1. Close and reopen the browser the next day (within 7 days),Still signed in,Desktop Chrome,Not run,,,,
+AUT-014,"07 Sign up, sign in & account access",P1,"After login, return to the previous page","Signed out, item in cart",1. Cart → Continue to checkout → Create account / Log in,"After signing in you land on checkout, not on the home page",Desktop Chrome,Not run,,,,
+AUT-015,"07 Sign up, sign in & account access",P1,Forgot password (email),Account with email,1. Forgot password → enter email,Neutral message shown regardless; a reset link is created/sent per email setup,Desktop Chrome,Not run,,,,
+AUT-016,"07 Sign up, sign in & account access",P1,Forgot password for phone-only account,Phone-only account,1. Use Forgot password,Page explains to contact support; no error,Desktop Chrome,Not run,,,,
+AUT-017,"07 Sign up, sign in & account access",P1,Reset password link,Valid reset link,"1. Open link
+2. Set a new password
+3. Log in",Works once; reused/expired link is rejected,Desktop Chrome,Not run,,,,
+AUT-018,"07 Sign up, sign in & account access",P0,Customer cannot open admin,Signed in as customer,1. Open /admin and /admin/orders,Redirected/blocked; no admin data visible,Desktop Chrome,Not run,,,,
+AUT-019,"07 Sign up, sign in & account access",P0,Signed-out user cannot open account pages,Signed out,"1. Open /account, /account/orders",Redirected to login,Desktop Chrome,Not run,,,,
+AUT-020,"07 Sign up, sign in & account access",P0,Admin login,Admin credentials,1. Login page → Use Email-ID → admin email + password,Lands in the Admin dashboard,Desktop Chrome,Not run,,,,
+AUT-021,"07 Sign up, sign in & account access",P2,Disabled user cannot sign in,Admin disables a customer (Users),1. Try to log in as them,Sign-in refused,Desktop Chrome,Not run,,,,
+CHK-001,08 Checkout & payment,P0,Sign-up is mandatory before checkout,"Signed out, item in cart",1. Cart → Continue to checkout,Sent to Create account (with a Log in link); guest cannot reach the payment form,Desktop Chrome,Not run,,,,
+CHK-002,08 Checkout & payment,P0,Checkout form for new address,"Signed in, item in cart","1. Fill name, phone, address, city, state, pincode",Accepted; phone accepts 10 digits or +91; pincode must be 6 digits,Desktop Chrome,Not run,,,,
+CHK-003,08 Checkout & payment,P1,Checkout validation,None,1. Submit with empty/invalid fields,Readable field errors; entered values are NOT wiped after an error,Desktop Chrome,Not run,,,,
+CHK-004,08 Checkout & payment,P1,Saved address,Account with a saved address,1. Open checkout,Saved address selectable and used; 'new address' also works,Desktop Chrome,Not run,,,,
+CHK-005,08 Checkout & payment,P2,Different billing address,None,1. Tick different billing address and fill it,Order shows both addresses,Desktop Chrome,Not run,,,,
+CHK-006,08 Checkout & payment,P0,Razorpay test payment success,"Razorpay TEST keys; card 4111 1111 1111 1111, any future date, CVV 123","1. Continue to secure payment
+2. Pay
+3. Wait",Redirects to order confirmation 'Order confirmed'; cart empty; badge gone; order in Account → Orders as paid,Desktop Chrome,Not run,,,,
+CHK-007,08 Checkout & payment,P0,Payment failure keeps the cart,Razorpay test,"1. Start payment
+2. Use the failure test card / click Payment failed","Error shown, order not confirmed, cart items still there, badge unchanged",Desktop Chrome,Not run,,,,
+CHK-008,08 Checkout & payment,P0,Close the payment window,Razorpay test,"1. Start payment
+2. Close the popup without paying",Message 'Payment was not completed'; cart still full; can start again,Desktop Chrome,Not run,,,,
+CHK-009,08 Checkout & payment,P0,Retry after failure,After the previous test,1. Go to cart → checkout again → pay successfully,Only one confirmed order; the earlier unpaid order is cancelled and its stock returned,Desktop Chrome,Not run,,,,
+CHK-010,08 Checkout & payment,P1,Double click on Pay,None,1. Click Continue to secure payment twice quickly,Only one order/payment created,Desktop Chrome,Not run,,,,
+CHK-011,08 Checkout & payment,P0,UPI / net banking test,Razorpay test mode,1. Pay using the test UPI (success@razorpay) and net banking test bank,Success confirmed; order paid,Desktop Chrome,Not run,,,,
+CHK-012,08 Checkout & payment,P0,Totals match Razorpay amount,None,1. Compare the amount in the Razorpay popup with the cart total,Exactly equal (in rupees),Desktop Chrome,Not run,,,,
+CHK-013,08 Checkout & payment,P0,Coupon carries into checkout,Coupon applied in cart,1. Continue to checkout and pay,Discount included in the paid amount and shown on the order page; coupon usage count +1 after payment,Desktop Chrome,Not run,,,,
+CHK-014,08 Checkout & payment,P1,Shipping / GST on order,Two states (home state vs other),1. Place orders to both,Home state shows CGST+SGST; other state shows IGST; delivery charge per shipping rules,Desktop Chrome,Not run,,,,
+CHK-015,08 Checkout & payment,P1,Stock reduces on order,Product with stock N,1. Pay for 1 unit,Stock becomes N-1; unpaid abandoned orders release stock (after new checkout or 15 min),Desktop Chrome,Not run,,,,
+CHK-016,08 Checkout & payment,P1,Last unit race,"Product with stock 1, two customers","1. Both add it
+2. Both pay at the same time",Only one succeeds; the other sees an out-of-stock message; no negative stock,Desktop Chrome,Not run,,,,
+CHK-017,08 Checkout & payment,P1,Reservation expiry,Abandoned unpaid order,"1. Wait 15+ minutes (cron runs)
+2. Check stock",Stock returned; order cancelled; customer sees 'cancelled' on its page,Desktop Chrome,Not run,,,,
+CHK-018,08 Checkout & payment,P1,Gateway unavailable message,Disable Razorpay in settings,1. Open checkout,Razorpay shown as unavailable; button says credentials required; no crash,Desktop Chrome,Not run,,,,
+CHK-019,08 Checkout & payment,P2,Snapmint / EMI option,Not yet active,1. Look at payment methods,Listed as unavailable (until Snapmint is enabled via Razorpay),Desktop Chrome,Not run,,,,
+CHK-020,08 Checkout & payment,P1,Browser back after paying,Completed payment,1. Press Back from the order page,No duplicate order; cart still empty,Desktop Chrome,Not run,,,,
+CHK-021,08 Checkout & payment,P0,Payment confirmed even if the page is closed,Razorpay test,"1. Pay
+2. Close the tab right after paying",Webhook confirms: order becomes CONFIRMED/paid within a minute (check Admin → Orders),Desktop Chrome,Not run,,,,
+ORD-001,09 Order confirmation & My account,P0,Order confirmation page,After a paid order,1. Read the page,"Shows order number, items with images, amounts, GST split, address, payment status, tracker, next steps",Desktop Chrome,Not run,,,,
+ORD-002,09 Order confirmation & My account,P1,Confirmation page actions,Same,"1. Click Continue shopping, Track order, Print",Each works; print layout is clean,Desktop Chrome,Not run,,,,
+ORD-003,09 Order confirmation & My account,P1,Receipt link privacy,Order link,1. Open the link signed out / in another account,Receipt viewable by link only; the account 'Track order' button appears only for the owner,Desktop Chrome,Not run,,,,
+ORD-004,09 Order confirmation & My account,P1,Unpaid order page,Unpaid order,1. Open its confirmation link,Shows 'awaiting payment' state and a retry option; not 'confirmed',Desktop Chrome,Not run,,,,
+ORD-005,09 Order confirmation & My account,P0,My orders list and details,Customer with orders,1. Account → Orders → open one,Only their own orders; statuses and items correct,Desktop Chrome,Not run,,,,
+ORD-006,09 Order confirmation & My account,P0,Cannot see another customer's order,Two accounts,"1. Copy an order URL from account A, open as B",Not found / blocked,Desktop Chrome,Not run,,,,
+ORD-007,09 Order confirmation & My account,P1,Order cancelled by admin,A paid or unpaid order,1. Admin → Orders → open it → set status CANCELLED,Status changes; stock returns; customer sees it cancelled; a paid order is refunded through the refund flow,Desktop Chrome,Not run,,,,
+ORD-008,09 Order confirmation & My account,P1,Returns and refunds follow the policy,Delivered order,"1. Customer contacts support for a return
+2. Admin marks RETURN_REQUESTED → RETURNED and processes the refund",Status flow allowed; refund amount right; customer notified; outside the return window the team refuses per the policy,Desktop Chrome,Not run,,,,
+ORD-009,09 Order confirmation & My account,P1,Profile update,Signed in,1. Account → Profile → change name/phone,Saved; phone must be valid and not used by someone else,Desktop Chrome,Not run,,,,
+ORD-010,09 Order confirmation & My account,P1,Change password,Signed in,1. Profile → change password with wrong then right current password,Wrong current password refused; right one works; new password signs in,Desktop Chrome,Not run,,,,
+ORD-011,09 Order confirmation & My account,P1,Address book,Signed in,"1. Add, edit, set default, delete an address",All work and appear at checkout,Desktop Chrome,Not run,,,,
+ORD-012,09 Order confirmation & My account,P1,Wishlist,Signed in,"1. Add/remove items
+2. Add a wishlist item to the cart",Works and persists,Desktop Chrome,Not run,,,,
+ORD-013,09 Order confirmation & My account,P2,My reviews / notifications,Signed in,1. Open Account → Reviews and Notifications,Pages load; order updates appear as notifications,Desktop Chrome,Not run,,,,
+ADM-001,10 Admin panel,P0,Admin layout,Admin signed in,1. Open several admin pages,Only the admin top bar and sidebar show (no store header); the active menu item is highlighted; works on phone width,Desktop + Phone,Not run,,,,
+ADM-002,10 Admin panel,P0,Admin sign out,Admin signed in,1. Click Sign out in the top bar,Signed out and sent to the login page,Desktop Chrome,Not run,,,,
+ADM-003,10 Admin panel,P1,Dashboard,Some orders exist,1. Open Admin home,"Sales, orders, customers, low stock and quick actions load with correct numbers",Desktop Chrome,Not run,,,,
+ADM-004,10 Admin panel,P0,Create a product,Admin,"1. Products → New product → fill name, category, price, stock, photo
+2. Save",Product appears in Admin list and on the store (if active),Desktop Chrome,Not run,,,,
+ADM-005,10 Admin panel,P0,Edit price / stock / status,Product exists,"1. Change price, stock, set to draft
+2. Save",Changes show on the store; draft products hidden from customers,Desktop Chrome,Not run,,,,
+ADM-006,10 Admin panel,P1,Variants,Product exists,"1. Add a variant with its own price/stock
+2. Remove one",Store shows the variants; totals follow the chosen variant,Desktop Chrome,Not run,,,,
+ADM-007,10 Admin panel,P1,Duplicate / archive product,Product exists,"1. Click duplicate, then archive",Duplicate created; archived product disappears from store but old orders keep it,Desktop Chrome,Not run,,,,
+ADM-008,10 Admin panel,P1,"Product CSV template, import and export",Admin,"1. Download the template
+2. Fill 3 products
+3. Import
+4. Export the catalog",Rows created; bad rows reported with a clear reason; export matches the catalog,Desktop Chrome,Not run,,,,
+ADM-009,10 Admin panel,P1,Product photos,Storage configured,1. Upload 1 and 5 photos; delete one,Photos show on the store; needs Supabase storage settings on Render,Desktop Chrome,Not run,,,,
+ADM-010,10 Admin panel,P1,"Categories, brands, collections",Admin,1. Add / rename / delete each,Store menus update; deleting one with products is handled safely,Desktop Chrome,Not run,,,,
+ADM-011,10 Admin panel,P0,Start a sale (guided),Products exist,1. Offers → choose a category and a % → Start sale,Prices on the store drop and show a badge; Running sales list shows it,Desktop Chrome,Not run,,,,
+ADM-012,10 Admin panel,P0,End a sale,Running sale,1. Click End sale on it,Prices return to normal on the store,Desktop Chrome,Not run,,,,
+ADM-013,10 Admin panel,P1,Sale with dates,None,1. Create a sale that starts tomorrow and ends later,Not active today; active in its window; ends automatically,Desktop Chrome,Not run,,,,
+ADM-014,10 Admin panel,P0,Create / pause / delete coupon,Admin,"1. Offers → New coupon → fill code and value
+2. Pause
+3. Delete",Coupon works in the cart when active; refused when paused,Desktop Chrome,Not run,,,,
+ADM-015,10 Admin panel,P1,Coupon limits,Coupon with usage limit and per-user rule,1. Use it beyond the limit,Refused with a clear message,Desktop Chrome,Not run,,,,
+ADM-016,10 Admin panel,P1,Homepage editor,Admin,"1. Storefront → change headline, sections, banners",Home page reflects the change; Save button shows unsaved state and success message,Desktop Chrome,Not run,,,,
+ADM-017,10 Admin panel,P1,Announcement bar editor,Admin,1. Homepage → edit messages,Top scrolling bar updates,Desktop Chrome,Not run,,,,
+ADM-018,10 Admin panel,P1,Policies & pages editor,Admin,"1. Policies → open each policy
+2. Edit text
+3. Save
+4. Reset to default",Policy page updates; business name/address tokens replaced; reset restores default,Desktop Chrome,Not run,,,,
+ADM-019,10 Admin panel,P1,"Settings (support email/phone, store name)",Admin,1. Settings → change and save,Contact page and footer show the new details,Desktop Chrome,Not run,,,,
+ADM-020,10 Admin panel,P0,"Order list, search and filter",Orders exist,1. Admin → Orders → filter by status and search by number/phone/email,Correct results; phone-only customers show their phone,Desktop Chrome,Not run,,,,
+ADM-021,10 Admin panel,P0,Order status flow,A paid order,1. Move CONFIRMED → PACKED → SHIPPED → OUT_FOR_DELIVERY → DELIVERED,Each step allowed in order; invalid jumps refused; customer sees status; notifications created,Desktop Chrome,Not run,,,,
+ADM-022,10 Admin panel,P1,Shipment / tracking details,Order being shipped,1. Add courier and tracking number,Customer sees them on the order,Desktop Chrome,Not run,,,,
+ADM-023,10 Admin panel,P1,Export orders CSV,Orders exist,1. Click export,CSV downloads with correct columns; phone/email present,Desktop Chrome,Not run,,,,
+ADM-024,10 Admin panel,P0,Refund,"Paid order, Razorpay test","1. Create a refund request
+2. Process it",Refund goes to Razorpay; order/payment status update; customer notified; cannot refund twice,Desktop Chrome,Not run,,,,
+ADM-025,10 Admin panel,P1,Payments page,Payments exist,1. Admin → Payments,"Shows gateway, status, amounts; matches Razorpay dashboard",Desktop Chrome,Not run,,,,
+ADM-026,10 Admin panel,P1,Inventory,Admin,1. Adjust stock with a reason,Stock updates; history shows the change,Desktop Chrome,Not run,,,,
+ADM-027,10 Admin panel,P1,Reviews moderation,A pending review,"1. Approve, then hide it",Approved shows on the product page; hidden disappears,Desktop Chrome,Not run,,,,
+ADM-028,10 Admin panel,P1,Customers list,Customers exist,1. Open Customers,"Shows name, phone/email, order count",Desktop Chrome,Not run,,,,
+ADM-029,10 Admin panel,P1,Users & roles,Super admin,1. Users → change a user's role and disable one,"Role takes effect on next request; product manager cannot see orders they aren't allowed to, etc.",Desktop Chrome,Not run,,,,
+ADM-030,10 Admin panel,P1,Role restrictions,PRODUCT_MANAGER and ORDER_MANAGER users,"1. Sign in as each
+2. Try the other's pages",Each can only use the areas its role allows,Desktop Chrome,Not run,,,,
+ADM-031,10 Admin panel,P2,Tax and shipping rules,Admin,1. Edit GST rule and a shipping rule,New orders use them,Desktop Chrome,Not run,,,,
+ADM-032,10 Admin panel,P2,Analytics,Data exists,1. Open Analytics,Charts load; numbers plausible,Desktop Chrome,Not run,,,,
+ADM-033,10 Admin panel,P2,Audit log,Admin actions done,1. Open Audit logs,Admin logins and changes are recorded with who and when,Desktop Chrome,Not run,,,,
+PAY-001,"11 Payments, webhooks & background jobs",P0,Webhook success updates the order,"Order pending, Razorpay test",1. Make a test payment but close the tab immediately,Order becomes paid via the webhook; Razorpay dashboard shows the webhook delivered with 200,Desktop Chrome,Not run,,,,
+PAY-002,"11 Payments, webhooks & background jobs",P1,Webhook with wrong signature,None,1. Send a fake POST to the webhook URL,Rejected (400); nothing changes,Desktop Chrome,Not run,,,,
+PAY-003,"11 Payments, webhooks & background jobs",P1,Duplicate webhook,Paid order,1. Resend the same webhook from Razorpay dashboard,"No double processing: one confirmation, stock and coupon counted once",Desktop Chrome,Not run,,,,
+PAY-004,"11 Payments, webhooks & background jobs",P1,payment.failed webhook,Failed test payment,1. Check the order,Payment marked failed; cart kept; stock released later,Desktop Chrome,Not run,,,,
+PAY-005,"11 Payments, webhooks & background jobs",P1,Reconcile job fixes stuck payments,A paid order stuck as pending,1. Run the reconcile cron manually (Test run),Order updated to paid after checking with Razorpay,Desktop Chrome,Not run,,,,
+PAY-006,"11 Payments, webhooks & background jobs",P1,Release reservations job,Expired unpaid order,1. Test run the release job,"Order cancelled, stock returned",Desktop Chrome,Not run,,,,
+PAY-007,"11 Payments, webhooks & background jobs",P1,Cron endpoints refuse strangers,None,1. POST to each cron URL without the Bearer header,401 for all three,Desktop Chrome,Not run,,,,
+PAY-008,"11 Payments, webhooks & background jobs",P2,Notification dispatch,Pending notifications,1. Test run the job,Notifications marked sent; no errors,Desktop Chrome,Not run,,,,
+LEG-001,"12 Policies, cookies & legal",P0,All 5 policy pages open,None,"1. Open Privacy, Terms, Shipping, Refund/Returns, Cookie policy from the footer",Each loads; text reads correctly; no {placeholders} visible; brand name is Mobile & More,Desktop Chrome,Not run,,,,
+LEG-002,"12 Policies, cookies & legal",P0,Business details filled in,Admin,"1. Policies → set legal business name, address, GST number, contact",Policy pages and contact page show them; no defaults like the admin's personal email,Desktop Chrome,Not run,,,,
+LEG-003,"12 Policies, cookies & legal",P1,Cookie banner first visit,New/private window,1. Open the site,Banner appears with Accept all / Essential only and a Cookie Policy link; does not block browsing,Desktop Chrome,Not run,,,,
+LEG-004,"12 Policies, cookies & legal",P1,Cookie choice remembered,Banner shown,"1. Click Accept all
+2. Reload
+3. Open another page",Banner does not return; 'Cookie settings' in the footer reopens it,Desktop Chrome,Not run,,,,
+LEG-005,"12 Policies, cookies & legal",P1,Essential only,New window,1. Choose Essential only,Banner closes; cart and login still work,Desktop Chrome,Not run,,,,
+LEG-006,"12 Policies, cookies & legal",P1,Contact page,None,1. Open Contact us,"Shows real email/phone/address from Settings; links (mailto:, tel:) work",Desktop Chrome,Not run,,,,
+LEG-007,"12 Policies, cookies & legal",P2,Consent text at sign-up / checkout,None,1. Look under Create account and Continue to payment,Links to Terms and Privacy Policy present and open,Desktop Chrome,Not run,,,,
+LEG-008,"12 Policies, cookies & legal",P1,Legal review,Owner/lawyer,1. Read all 5 policies once,"Wording approved (returns window, warranty, shipping times match the real business)",Desktop Chrome,Not run,,,,
+SEC-001,13 Security & privacy,P0,Admin API blocked for customers,Customer signed in,1. Call /api/admin/products (browser or DevTools),403 Administrator access is required,Desktop Chrome,Not run,,,,
+SEC-002,13 Security & privacy,P0,Signed-out API access,Signed out,1. Call /api/account/profile,401 Please sign in,Desktop Chrome,Not run,,,,
+SEC-003,13 Security & privacy,P0,Cross-site request blocked,None,1. From another website/DevTools send a POST to /api/cart/items with a different Origin,403 Cross-site request rejected,Desktop Chrome,Not run,,,,
+SEC-004,13 Security & privacy,P1,Session cookie flags,Signed in,1. DevTools → Application → Cookies,"'session' is HttpOnly, Secure, SameSite=Lax",Desktop Chrome,Not run,,,,
+SEC-005,13 Security & privacy,P1,Tampered session refused,Signed in,"1. Edit a character in the session cookie
+2. Reload",Treated as signed out,Desktop Chrome,Not run,,,,
+SEC-006,13 Security & privacy,P1,Script injection in text fields,None,"1. Use <img src=x onerror=alert(1)> as name, address and review text","Shown as plain text; no popup anywhere, including Admin",Desktop Chrome,Not run,,,,
+SEC-007,13 Security & privacy,P1,Password hashes never exposed,None,1. Check API responses for users/orders,No passwordHash/IMEI/tokens in any response,Desktop Chrome,Not run,,,,
+SEC-008,13 Security & privacy,P1,Secrets not in the browser,None,1. View page source and network responses,"No API keys, DATABASE_URL, CRON_SECRET anywhere",Desktop Chrome,Not run,,,,
+SEC-009,13 Security & privacy,P1,Rate limits,None,"1. Repeat sign-up, login, forgot-password rapidly",Limits kick in with a clear message,Desktop Chrome,Not run,,,,
+SEC-010,13 Security & privacy,P2,Security headers,None,1. Check response headers (securityheaders.com),"X-Frame-Options, Referrer-Policy, Permissions-Policy present",Desktop Chrome,Not run,,,,
+SEC-011,13 Security & privacy,P1,Razorpay uses TEST vs LIVE keys correctly,Before launch,1. Check keys on Render,Test keys while testing; live keys only after KYC; webhook secret matches,Desktop Chrome,Not run,,,,
+SEC-012,13 Security & privacy,P1,Personal data handling,Owner,1. Check who can see customer phone numbers/addresses,Only admin roles; support process documented,Desktop Chrome,Not run,,,,
+DEV-001,"14 Devices, browsers & layout",P0,Phone layout (Android Chrome),Android phone,1. Walk Home → Product → Cart → Sign up → Checkout,"No horizontal scroll, no overlapped or cut text, buttons easy to tap",Android Chrome,Not run,,,,
+DEV-002,"14 Devices, browsers & layout",P0,iPhone layout (Safari),iPhone,1. Same walk-through,Same; iOS keyboard does not hide fields; sticky header ok,iPhone Safari,Not run,,,,
+DEV-003,"14 Devices, browsers & layout",P1,Tablet layout,iPad/Android tablet,"1. Browse home, listing, product","2-3 column grids, header intact",Tablet,Not run,,,,
+DEV-004,"14 Devices, browsers & layout",P0,Mac Chrome and Safari,Mac,"1. Home, cart, login, policy pages",Footer at the bottom; density right; fonts load,Mac Chrome + Safari,Not run,,,,
+DEV-005,"14 Devices, browsers & layout",P1,Windows Edge and Firefox,Windows,1. Same walk-through,No layout differences that hurt use,Edge + Firefox,Not run,,,,
+DEV-006,"14 Devices, browsers & layout",P1,Different zoom levels,Desktop,"1. Set browser zoom to 80%, 100%, 125%",Site stays usable at each; no overlap,Desktop,Not run,,,,
+DEV-007,"14 Devices, browsers & layout",P1,Large monitor (1920+),Big screen,1. Open Home and listing,Content centred/scaled well; not stretched or tiny,1920x1080,Not run,,,,
+DEV-008,"14 Devices, browsers & layout",P2,Dark mode / OS settings,OS dark mode,1. Open the site,Still readable (no white-on-white text),Desktop Chrome,Not run,,,,
+DEV-009,"14 Devices, browsers & layout",P2,Slow network,Chrome DevTools Slow 3G,1. Open Home and a product,Skeleton/loading state shows; nothing breaks; images load progressively,Desktop Chrome,Not run,,,,
+DEV-010,"14 Devices, browsers & layout",P2,Keyboard use,Desktop,"1. Tab through header, forms, checkout",Every control reachable; focus outline visible; Enter submits forms,Desktop Chrome,Not run,,,,
+DEV-011,"14 Devices, browsers & layout",P2,Screen reader basics,VoiceOver/NVDA,1. Open sign-in,Fields have labels; errors announced,Desktop Chrome,Not run,,,,
+DEV-012,"14 Devices, browsers & layout",P2,Print order receipt,Order page,1. Click Print,Clean printable layout without header/buttons,Desktop Chrome,Not run,,,,
+SEO-001,15 SEO & performance,P1,Page titles and descriptions,None,"1. Check home, listing, product, policy pages",Unique titles including 'Mobile & More'; sensible descriptions,Desktop Chrome,Not run,,,,
+SEO-002,15 SEO & performance,P1,sitemap.xml and robots.txt,None,1. Open /sitemap.xml and /robots.txt,"Sitemap lists products/categories/policies; robots allows the store and blocks /admin, /api",Desktop Chrome,Not run,,,,
+SEO-003,15 SEO & performance,P1,Render address not indexed,None,1. Open the Render address,Redirects to the main site (no duplicate site in Google),Desktop Chrome,Not run,,,,
+SEO-004,15 SEO & performance,P2,Lighthouse (mobile),Chrome,1. Run Lighthouse on Home and a product,"Performance 70+, Accessibility 90+, no console errors",Desktop Chrome,Not run,,,,
+SEO-005,15 SEO & performance,P2,Favicon and social preview,None,1. Check the browser tab icon and share the link in WhatsApp,Icon and title/image show correctly,Desktop Chrome,Not run,,,,
+SEO-006,15 SEO & performance,P2,Broken links crawl,Tool or manual,"1. Click through the header, footer and category links",No 404s,Desktop Chrome,Not run,,,,
+LIV-001,16 Go-live checklist,P0,Remove demo products,Real catalog ready,1. Run the remove-demo script (npm run db:remove-demo) after adding real products,Only real products remain; homepage offers use real items,Desktop Chrome,Not run,,,,
+LIV-002,16 Go-live checklist,P0,"Real prices, stock, photos",Owner,1. Review every product in Admin,Prices/GST/warranty/condition correct; every product has photos,Desktop Chrome,Not run,,,,
+LIV-003,16 Go-live checklist,P0,Razorpay LIVE mode,KYC approved,1. Switch keys and webhook secret to live on Render; place a small real order and refund it,Real payment succeeds; webhook received; refund works,Desktop Chrome,Not run,,,,
+LIV-004,16 Go-live checklist,P0,Admin password changed and secrets files deleted,Owner,"1. Change the admin password
+2. Delete the secrets .txt files from Documents",New password works; old one refused; no secrets left on the PC,Desktop Chrome,Not run,,,,
+LIV-005,16 Go-live checklist,P1,Support email/phone/address real,Owner,1. Settings and Policies pages,"Real, monitored contact details everywhere",Desktop Chrome,Not run,,,,
+LIV-006,16 Go-live checklist,P1,Upgrade or keep-alive for Render,Owner,1. Decide: paid Render plan or keep-alive job,No cold-start delays for customers,Desktop Chrome,Not run,,,,
+LIV-007,16 Go-live checklist,P1,Storage for product photos,Owner,"1. Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, STORAGE_BUCKET on Render",Admin photo upload works,Desktop Chrome,Not run,,,,
+LIV-008,16 Go-live checklist,P1,Domain auto-renewal,Hostinger,1. Turn on auto-renew (expires 2027-03-30),Enabled,Desktop Chrome,Not run,,,,
+LIV-009,16 Go-live checklist,P1,Final full regression,QA team,1. Run every P0 and P1 case above on phone and desktop,All pass; no open Blocker/High bugs,Desktop Chrome,Not run,,,,
