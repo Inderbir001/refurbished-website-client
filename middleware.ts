@@ -10,7 +10,12 @@ export function middleware(request: NextRequest) {
     if (site) return NextResponse.redirect(new URL(path + request.nextUrl.search, site), 307);
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-  if (!path.startsWith("/api/")) return NextResponse.next();
+  if (!path.startsWith("/api/")) {
+    // Server code (the storefront data cache) needs to know which page is being rendered.
+    const forwarded = new Headers(request.headers);
+    forwarded.set("x-app-path", path);
+    return NextResponse.next({ request: { headers: forwarded } });
+  }
   // Split deployment: the frontend never exposes the backend's private endpoints.
   if (process.env.BACKEND_URL && path.startsWith("/api/internal")) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return NextResponse.next();

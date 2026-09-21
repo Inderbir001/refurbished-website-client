@@ -16,6 +16,7 @@ deployment a pure frontend; left unset (Render, local development, any single-ho
 | `INTERNAL_API_SECRET` | same random value (32+ chars) | same random value |
 | `NEXT_PUBLIC_APP_URL` | public site address | public site address |
 | `DATABASE_URL`, `AUTH_SECRET`, `DEVICE_DATA_ENCRYPTION_KEY`, `CRON_SECRET`, `RAZORPAY_*` | **not set** | set |
+| `STOREFRONT_CACHE_SECONDS` | optional, default `20` (`0` turns it off) | – |
 | `API_ONLY` | `true` on Render only | backend host serves only `/api/*`; page requests redirect to the public site |
 | `ALLOWED_ORIGINS` | – | extra site addresses (e.g. the `*.vercel.app` alias), comma separated |
 

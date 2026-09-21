@@ -28,13 +28,21 @@ export async function verifySessionLocally(token: string): Promise<Session | nul
     return { sub: user.id, role: user.role, email: accountLabel(user) };
   } catch { return null; }
 }
+// Split deployment: remember a verified cookie for a few seconds so every click does not wait for the backend again.
+// (Writes and admin API calls are always verified by the backend itself.)
+const verified = new Map<string, { until: number; session: Session | null }>();
 export async function readSession(token?: string): Promise<Session | null> {
   if (!token) return null;
   if (!isFrontendOnly()) return verifySessionLocally(token);
-  // Split deployment: the frontend holds no AUTH_SECRET, so the backend checks the cookie for it.
+  const known = verified.get(token);
+  if (known && known.until > Date.now()) return known.session;
+  // The frontend holds no AUTH_SECRET, so the backend checks the cookie for it.
   try {
     const response = await backendFetch("/api/internal/session", { body: JSON.stringify({ token }) });
-    return response.ok ? ((await response.json()) as { data: Session | null }).data : null;
+    const session = response.ok ? ((await response.json()) as { data: Session | null }).data : null;
+    if (verified.size > 500) verified.clear();
+    verified.set(token, { until: Date.now() + 15_000, session });
+    return session;
   } catch { return null; }
 }
 // cache(): several components on one page ask for the session; verify it once per request.
