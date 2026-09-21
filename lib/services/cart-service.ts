@@ -17,14 +17,21 @@ async function ensureCart(actor: CartActor) {
 const loadCart = (cartId: string) => db.cart.findUniqueOrThrow({ where: { id: cartId }, include: cartInclude });
 export async function getOrCreateCart(actor: CartActor) { return loadCart((await ensureCart(actor)).id); }
 export async function getCart(actor: CartActor) { return getOrCreateCart(actor); }
-export async function addCartItem(actor: CartActor, input: { productId: string; variantId?: string; quantity: number }) {
+async function addToCart(actor: CartActor, input: { productId: string; variantId?: string; quantity: number }) {
   const [cart, product] = await Promise.all([ensureCart(actor), db.product.findFirst({ where: { id: input.productId, status: "ACTIVE", deletedAt: null }, include: { variants: true } })]);
   if (!product) throw new AppError(404, "This product is no longer available.");
   const variant = input.variantId ? product.variants.find((item) => item.id === input.variantId) : product.variants[0];
   if (!variant) throw new AppError(400, "Select a product variant before adding it to the cart.");
   if (variant.stock < input.quantity) throw new AppError(409, "Only limited stock is available.");
   await db.cartItem.upsert({ where: { cartId_productId_variantId: { cartId: cart.id, productId: product.id, variantId: variant.id } }, update: { quantity: { increment: input.quantity } }, create: { cartId: cart.id, productId: product.id, variantId: variant.id, quantity: input.quantity } });
-  return loadCart(cart.id);
+  return cart.id;
+}
+export async function addCartItem(actor: CartActor, input: { productId: string; variantId?: string; quantity: number }) { return loadCart(await addToCart(actor, input)); }
+// Product cards only need the new item count for the header badge, so skip loading the whole cart (several queries).
+export async function addCartItemLite(actor: CartActor, input: { productId: string; variantId?: string; quantity: number }) {
+  const cartId = await addToCart(actor, input);
+  const total = await db.cartItem.aggregate({ _sum: { quantity: true }, where: { cartId } });
+  return total._sum.quantity ?? 0;
 }
 export async function changeCartItem(actor: CartActor, itemId: string, quantity: number) {
   const cart = await ensureCart(actor);
