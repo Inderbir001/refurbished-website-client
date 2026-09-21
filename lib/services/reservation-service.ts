@@ -2,9 +2,10 @@ import { InventoryReason, OrderStatus, PaymentStatus, Prisma } from "@prisma/cli
 import { db } from "../db";
 import { queueOrderNotification } from "../notifications/service";
 
-export async function releaseExpiredReservations(now = new Date()) {
+// `userId` limits the release to one shopper's orders; `notify: false` skips the "order expired" message (used when they start a new checkout).
+export async function releaseExpiredReservations(now = new Date(), options: { userId?: string; notify?: boolean } = {}) {
   const orders = await db.order.findMany({
-    where: { status: OrderStatus.PENDING, paymentStatus: { in: [PaymentStatus.PENDING, PaymentStatus.FAILED] }, reservations: { some: { releasedAt: null, expiresAt: { lte: now } } } },
+    where: { ...(options.userId ? { userId: options.userId } : {}), status: OrderStatus.PENDING, paymentStatus: { in: [PaymentStatus.PENDING, PaymentStatus.FAILED] }, reservations: { some: { releasedAt: null, expiresAt: { lte: now } } } },
     select: { id: true, orderNumber: true, userId: true },
   });
   const released: string[] = [];
@@ -22,7 +23,7 @@ export async function releaseExpiredReservations(now = new Date()) {
       await tx.auditLog.create({ data: { action: "RESERVATION_EXPIRED", entityType: "Order", entityId: order.id, after: { releasedAt: now.toISOString() } as Prisma.InputJsonValue } });
       return true;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
-    if (changed) { released.push(order.id); await queueOrderNotification({ userId: order.userId, orderId: order.id, template: "ORDER_EXPIRED", payload: { orderNumber: order.orderNumber } }); }
+    if (changed) { released.push(order.id); if (options.notify !== false) await queueOrderNotification({ userId: order.userId, orderId: order.id, template: "ORDER_EXPIRED", payload: { orderNumber: order.orderNumber } }); }
   }
   return released;
 }

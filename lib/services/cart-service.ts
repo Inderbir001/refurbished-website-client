@@ -38,3 +38,15 @@ export async function cartItemCount(actor: { userId?: string; sessionToken?: str
   const total = await db.cartItem.aggregate({ _sum: { quantity: true }, where: { cart: actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken } } });
   return total._sum.quantity ?? 0;
 }
+// When a shopper signs in or registers, the items they had collected as a guest join their account cart.
+export async function mergeGuestCart(sessionToken: string | undefined, userId: string) {
+  if (!sessionToken) return;
+  const guest = await db.cart.findUnique({ where: { sessionToken }, include: { items: true } });
+  if (!guest) return;
+  const cart = await db.cart.upsert({ where: { userId }, update: {}, create: { userId } });
+  for (const item of guest.items) {
+    if (!item.variantId) continue;
+    await db.cartItem.upsert({ where: { cartId_productId_variantId: { cartId: cart.id, productId: item.productId, variantId: item.variantId } }, update: { quantity: { increment: item.quantity } }, create: { cartId: cart.id, productId: item.productId, variantId: item.variantId, quantity: item.quantity } });
+  }
+  await db.cart.delete({ where: { id: guest.id } });
+}

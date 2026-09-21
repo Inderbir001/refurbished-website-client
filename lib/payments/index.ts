@@ -20,6 +20,8 @@ export async function markPaymentSuccess(paymentId: string, transactionId: strin
       const alreadyUsed = await tx.couponUsage.findUnique({ where: { orderId: payment.orderId } });
       if (coupon && !alreadyUsed) { await tx.couponUsage.create({ data: { couponId: coupon.id, userId: payment.order.userId, orderId: payment.orderId, discount: payment.order.discount } }); await tx.coupon.update({ where: { id: coupon.id }, data: { usedCount: { increment: 1 } } }); }
     }
+    // Paid: now the shopper's cart can be emptied (it is kept while payment is pending so a failed payment loses nothing).
+    if (payment.order.userId) { await tx.cartItem.deleteMany({ where: { cart: { userId: payment.order.userId } } }); await tx.cart.updateMany({ where: { userId: payment.order.userId }, data: { couponCode: null } }); }
     return { payment: updated, changed: true, userId: payment.order.userId, orderNumber: payment.order.orderNumber };
   });
   if (result.changed) await queueOrderNotification({ userId: result.userId, orderId: result.payment.orderId, template: "PAYMENT_CONFIRMED", payload: { orderNumber: result.orderNumber, amount: result.payment.amount } });

@@ -9,11 +9,14 @@ import { calculateCheckoutTotals } from "./pricing-service";
 import { canTransitionOrder } from "./order-state";
 import { quoteShipping } from "./shipping-service";
 import { queueOrderNotification } from "../notifications/service";
+import { releaseExpiredReservations } from "./reservation-service";
 
 export type AddressInput = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
 export async function createOrder(actor: CartActor, address: AddressInput, gateway: PaymentGateway, idempotencyKey: string, billingAddress?: AddressInput) {
   const existing = await db.payment.findUnique({ where: { idempotencyKey }, include: { order: true } });
   if (existing) return db.order.findUniqueOrThrow({ where: { id: existing.orderId }, include: { payments: true, items: true } });
+  // Starting a new checkout supersedes this shopper's earlier unpaid orders: give their reserved stock back first.
+  if (actor.userId) await releaseExpiredReservations(new Date(Date.now() + 60 * 60_000), { userId: actor.userId, notify: false });
   const cart = await getCart(actor);
   if (!cart.items.length) throw new AppError(400, "Your cart is empty.");
   const couponQuote = cart.couponCode ? await validateCouponForCart(cart.couponCode, couponLines(cart), actor.userId) : null;
@@ -34,7 +37,7 @@ export async function createOrder(actor: CartActor, address: AddressInput, gatew
     const totals = calculateCheckoutTotals(lines, { discount: couponQuote?.discount, shippingAmount: shippingQuote.charge });
     const intraState = taxRule ? address.state.toLowerCase() === taxRule.homeState.toLowerCase() : false;
     const order = await tx.order.create({ data: { confirmationToken: crypto.randomBytes(24).toString("hex"), orderNumber: `RS-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`, userId: actor.userId, couponCode: couponQuote?.coupon.code, subtotal: totals.subtotal, discount: totals.discount, taxAmount: totals.tax, cgstAmount: intraState ? Math.floor(totals.tax / 2) : 0, sgstAmount: intraState ? totals.tax - Math.floor(totals.tax / 2) : 0, igstAmount: intraState ? 0 : totals.tax, shippingAmount: totals.shipping, total: totals.total, shippingAddress: { ...address, deliveryMethod: shippingQuote.name, estimatedDaysMin: shippingQuote.estimatedDaysMin, estimatedDaysMax: shippingQuote.estimatedDaysMax }, billingAddress: billingAddress ?? address, status: OrderStatus.PENDING, paymentStatus: PaymentStatus.PENDING, items: { create: lines }, payments: { create: { gateway, amount: totals.total, status: PaymentStatus.PENDING, idempotencyKey } }, reservations: { create: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity, expiresAt: new Date(Date.now() + 15 * 60 * 1000) })) } }, include: { payments: true, items: true } });
-    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    // The cart is emptied only once the payment succeeds (see markPaymentSuccess), so a failed or abandoned payment leaves it intact.
     return order;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   await queueOrderNotification({ userId: actor.userId, orderId: order.id, template: "ORDER_PLACED", payload: { orderNumber: order.orderNumber, total: order.total } });

@@ -317,3 +317,25 @@ html.no-scroll, html.no-scroll body { overflow: hidden; }
 @media (min-width: 1200px) {
   body { zoom: 0.85; }
 }
+
+/* ---------- page frame: footer always sits at the bottom, with no blank strip below it (Mac/Safari/Chrome, any zoom) ---------- */
+html { background: var(--paper); }
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+body > main { flex: 1 0 auto; min-height: 0; }
+@media (min-width: 1200px) {
+  body { min-height: calc(100vh / 0.85); min-height: calc(100dvh / 0.85); }
+}
+
+/* ---------- cart: coupon box ---------- */
+.order-summary .coupon-form { display: flex; align-items: stretch; margin: 14px 0 8px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.order-summary .coupon-form:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255, 106, 61, .16); }
+.order-summary .coupon-form input { flex: 1; min-width: 0; padding: 13px 14px; border: 0; border-radius: 0; background: transparent; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.order-summary .coupon-form input::placeholder { font-weight: 400; letter-spacing: 0; text-transform: none; }
+.order-summary .coupon-form input:focus { border: 0; box-shadow: none; }
+.order-summary .coupon-form button { flex: none; padding: 0 22px; border: 0; background: var(--grad-ink); color: #fff; font-weight: 700; cursor: pointer; transition: background .25s; }
+.order-summary .coupon-form button:hover { background: var(--orange); }
+.order-summary > small { display: block; margin: 0 0 10px; color: #b23a1b; font-size: 12.5px; line-height: 1.4; }
+
+/* ---------- sign-up / reviews ---------- */
+.auth-page label .optional { font-weight: 400; color: var(--muted); }
+.review-note { margin: 18px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--paper); color: var(--muted); font-size: 13.5px; }
