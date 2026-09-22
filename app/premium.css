@@ -203,6 +203,9 @@ button:disabled { cursor: not-allowed; }
 /* ---------- loading skeleton ---------- */
 .skeleton-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; }
 .skeleton-grid span { display: block; height: 330px; border-radius: var(--radius); background: linear-gradient(100deg, #eceee6 30%, #f8f9f3 50%, #eceee6 70%); background-size: 220% 100%; animation: skeleton 1.4s linear infinite; }
+.skeleton-line, .skeleton-block { border-radius: var(--radius); background: linear-gradient(100deg, #eceee6 30%, #f8f9f3 50%, #eceee6 70%); background-size: 220% 100%; animation: skeleton 1.4s linear infinite; }
+.skeleton-line { height: 40px; max-width: 360px; margin: 6px 0 0; }
+.skeleton-block { height: 480px; }
 
 /* ---------- scroll reveal ---------- */
 .rv-pending { opacity: 0; }
