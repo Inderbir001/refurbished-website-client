@@ -12,16 +12,25 @@ import { queueOrderNotification } from "../notifications/service";
 import { releaseExpiredReservations } from "./reservation-service";
 
 export type AddressInput = { name: string; phone: string; line1: string; line2?: string; city: string; state: string; pincode: string };
-export async function createOrder(actor: CartActor, address: AddressInput, gateway: PaymentGateway, idempotencyKey: string, billingAddress?: AddressInput) {
+export async function createOrder(actor: CartActor, address: AddressInput, gateway: PaymentGateway, idempotencyKey: string, billingAddress?: AddressInput, shippingRuleId?: string) {
   const existing = await db.payment.findUnique({ where: { idempotencyKey }, include: { order: true } });
   if (existing) return db.order.findUniqueOrThrow({ where: { id: existing.orderId }, include: { payments: true, items: true } });
   // Starting a new checkout supersedes this shopper's earlier unpaid orders: give their reserved stock back first.
   if (actor.userId) await releaseExpiredReservations(new Date(Date.now() + 60 * 60_000), { userId: actor.userId, notify: false });
   const cart = await getCart(actor);
   if (!cart.items.length) throw new AppError(400, "Your cart is empty.");
-  const couponQuote = cart.couponCode ? await validateCouponForCart(cart.couponCode, couponLines(cart), actor.userId) : null;
+  // A coupon that was valid when applied can go stale by the time checkout happens (expired, used up, no longer
+  // eligible…). That should never block the purchase — drop it quietly, the same way the cart page already shows
+  // it as unusable, instead of failing the whole order over a coupon the shopper may not even remember applying.
+  let couponQuote: Awaited<ReturnType<typeof validateCouponForCart>> | null = null;
+  if (cart.couponCode) {
+    try { couponQuote = await validateCouponForCart(cart.couponCode, couponLines(cart), actor.userId); }
+    catch { await db.cart.update({ where: { id: cart.id }, data: { couponCode: null } }); }
+  }
   const preliminarySubtotal = cart.items.reduce((sum, item) => sum + priceFor(item.variant ?? { price: null, salePrice: null }, item.product) * item.quantity, 0);
-  const shippingQuote = await quoteShipping({ state: address.state, pincode: address.pincode, subtotal: preliminarySubtotal - (couponQuote?.discount ?? 0) });
+  // The customer's chosen delivery option is honoured only if it still genuinely applies to this address/cart value;
+  // otherwise (or if none was chosen) this falls back to the best match, exactly as before.
+  const shippingQuote = await quoteShipping({ state: address.state, pincode: address.pincode, subtotal: preliminarySubtotal - (couponQuote?.discount ?? 0) }, shippingRuleId);
   const taxRule = await db.taxRule.findFirst({ where: { isActive: true }, orderBy: { createdAt: "asc" } });
   const order = await db.$transaction(async (tx) => {
     const lines: { productId: string; variantId: string; name: string; sku: string; unitPrice: number; quantity: number; taxRate: number }[] = [];
