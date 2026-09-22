@@ -73,6 +73,9 @@
 .consent-note a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .consent-note a:hover { color: var(--orange); }
 
+/* ===== small helper text under a field/section ===== */
+small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-size: 12px; margin-top: -6px; }
+
 /* ===== Admin: announcement + policy editors ===== */
 .hp-lead { margin: 0; padding: 14px 18px; background: #fff8ec; border: 1px solid #f3dfb5; border-radius: 14px; color: #6b5316; font-size: 14px; line-height: 1.6; }
 .ann-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }

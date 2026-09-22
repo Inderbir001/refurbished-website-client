@@ -5,8 +5,9 @@ Responses use `{ "data": ... }` on success and `{ "error": "..." }` on failure. 
 ## Authentication and accounts
 
 - `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`
-- `POST /api/auth/password-reset/request`, `POST /api/auth/password-reset/confirm`
-- `PATCH /api/account/profile`
+- `POST /api/auth/password-reset/request`, `POST /api/auth/password-reset/confirm` — email link
+- `POST /api/auth/password-reset/question`, `POST /api/auth/password-reset/answer` — security question (for accounts with no email), then `confirm` with the returned token
+- `PATCH /api/account/profile` — also sets/changes/removes the security question
 - `GET|POST|PATCH|DELETE /api/account/addresses`
 - `GET|POST|DELETE /api/account/wishlist`
 - `POST /api/account/reviews`

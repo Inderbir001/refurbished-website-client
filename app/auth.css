@@ -35,6 +35,12 @@
 .auth-form .consent-note { text-align: left; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+.auth-security-toggle { text-align: left; font-size: 13.5px; }
+.auth-security { display: grid; gap: 12px; padding: 14px; border: 1.5px dashed var(--line); border-radius: 12px; background: var(--paper); }
+.auth-security-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.auth-security-head b { color: var(--ink); }
+.auth-security select.auth-input { appearance: auto; }
+
 @media (max-width: 760px) {
   .auth-split { padding-top: 18px; }
   .auth-card { grid-template-columns: 1fr; min-height: 0; }

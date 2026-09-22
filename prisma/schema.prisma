@@ -154,6 +154,10 @@ model User {
   phone                 String?                @unique
   searchEvents          SearchEvent[]
   resetTokens           PasswordResetToken[]
+  // A fallback way to reset a password without an email — mainly for phone-only accounts. The answer is hashed
+  // like a password and never stored or returned in plain text.
+  securityQuestion      String?
+  securityAnswerHash    String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 }

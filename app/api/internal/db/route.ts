@@ -10,7 +10,7 @@ const READS = new Set(["findMany", "findFirst", "findFirstOrThrow", "findUnique"
 const NEVER_SERVED = new Set(["passwordResetToken"]);
 const MODELS = new Set(Object.values(Prisma.ModelName).map((name) => name.charAt(0).toLowerCase() + name.slice(1)).filter((name) => !NEVER_SERVED.has(name)));
 // The frontend has no use for these, so they never leave the backend even if a page selects the whole row.
-const SECRET_FIELDS = new Set(["passwordHash", "imeiEncrypted", "tokenHash"]);
+const SECRET_FIELDS = new Set(["passwordHash", "imeiEncrypted", "tokenHash", "securityAnswerHash"]);
 function scrub(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(scrub);
   if (value && typeof value === "object" && !(value instanceof Date)) return Object.fromEntries(Object.entries(value).filter(([key]) => !SECRET_FIELDS.has(key)).map(([key, item]) => [key, scrub(item)]));

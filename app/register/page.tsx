@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { AuthShell, authPerks } from "@/components/store/auth-shell";
 import { PasswordField, PhoneField } from "@/components/store/auth-fields";
+import { SecurityQuestionField } from "@/components/store/security-question-field";
 
 const safeNext = (value: string | null) => (value && value.startsWith("/") && !value.startsWith("//") ? value : null);
 
@@ -30,6 +31,7 @@ function RegisterForm() {
       <PhoneField label="Phone number" />
       <label className="auth-label"><span>Email <em>(optional)</em></span><input name="email" type="email" autoComplete="email" className="auth-input" placeholder="you@example.com" /></label>
       <PasswordField autoComplete="new-password" minLength={8} label="Create password" hint="At least 8 characters" />
+      <SecurityQuestionField />
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="primary-button auth-submit" disabled={busy}>{busy ? "Creating account…" : "Create account"}</button>
       <p className="consent-note">By continuing, you agree to our <Link href="/policies/terms-and-conditions">Terms &amp; Conditions</Link> and <Link href="/policies/privacy-policy">Privacy Policy</Link>.</p>
