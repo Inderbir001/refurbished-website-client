@@ -11,9 +11,9 @@ import { hashSecurityAnswer } from "@/lib/security-questions";
 import { mergeGuestCart } from "@/lib/services/cart-service";
 // Phone number and password are required; the email is optional (a blank box counts as "no email").
 const optionalEmail = z.preprocess((value) => (typeof value === "string" && value.trim() === "" ? undefined : value), z.string().trim().email("enter a valid email address or leave it empty").transform((value) => value.toLowerCase()).optional());
-// The security question is optional, but if either half is filled in, both must be (a question with no answer is useless).
-const bodySchema = z.object({ name: z.string().trim().min(2).max(100), phone: indianPhone, email: optionalEmail, password: z.string().min(8).max(72), securityQuestion: z.string().trim().max(200).optional(), securityAnswer: z.string().trim().min(2).max(200).optional() })
-  .refine((value) => !value.securityQuestion === !value.securityAnswer, { message: "Add an answer, or remove the security question.", path: ["securityAnswer"] });
+// A security question is mandatory: it's every account's way back in if the password is forgotten and there's no
+// email on file (or the email is unreachable).
+const bodySchema = z.object({ name: z.string().trim().min(2).max(100), phone: indianPhone, email: optionalEmail, password: z.string().min(8).max(72), securityQuestion: z.string().trim().min(1, "add a security question").max(200), securityAnswer: z.string().trim().min(2, "enter an answer").max(200) });
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ?? "local";
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     try {
       user = await db.user.create({ data: {
         name: input.name, phone: input.phone, email: input.email ?? null, passwordHash: await bcrypt.hash(input.password, 12),
-        securityQuestion: input.securityQuestion || null,
-        securityAnswerHash: input.securityAnswer ? await hashSecurityAnswer(input.securityAnswer) : null,
+        securityQuestion: input.securityQuestion,
+        securityAnswerHash: await hashSecurityAnswer(input.securityAnswer),
       } });
     }
     catch (error) { if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") throw new AppError(409, "An account with these details already exists. Please sign in."); throw error; }

@@ -4,16 +4,17 @@ import { SECURITY_QUESTIONS } from "@/lib/security-questions";
 
 const CUSTOM = "__custom__";
 
-// Optional at sign-up and collapsed by default (most people skip it), but the one self-service way to reset a
-// password without an email — worth surfacing for anyone signing up with just a phone number.
-export function SecurityQuestionField({ open: openByDefault = false }: { open?: boolean }) {
-  const [open, setOpen] = useState(openByDefault);
+// Every account needs a way to reset its password without waiting on email, so this is required at sign-up
+// (mandatory=true, the only mode registration uses). The account-settings page still offers it as an optional
+// add/change for accounts that were created before this was required.
+export function SecurityQuestionField({ mandatory = false }: { mandatory?: boolean }) {
+  const [open, setOpen] = useState(mandatory);
   const [choice, setChoice] = useState<string>(SECURITY_QUESTIONS[0]);
   const id = useId();
   if (!open) return <button type="button" className="link-button auth-security-toggle" onClick={() => setOpen(true)}>+ Add a way to recover your password without email</button>;
   return <div className="auth-security">
-    <div className="auth-security-head"><b>Recover without email</b><button type="button" className="link-button" onClick={() => setOpen(false)}>Skip this</button></div>
-    <p className="auth-sub">Optional. If you ever forget your password and have no email on the account, you can answer this to reset it.</p>
+    <div className="auth-security-head"><b>Security question</b>{!mandatory && <button type="button" className="link-button" onClick={() => setOpen(false)}>Skip this</button>}</div>
+    <p className="auth-sub">Used to reset your password if you ever forget it — required so you can always get back in, even without email.</p>
     <label className="auth-label"><span>Security question</span>
       <select name={choice === CUSTOM ? undefined : "securityQuestion"} className="auth-input" value={choice} onChange={(event) => setChoice(event.target.value)}>
         {SECURITY_QUESTIONS.map((q) => <option key={q} value={q}>{q}</option>)}

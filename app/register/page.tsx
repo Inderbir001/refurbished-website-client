@@ -31,7 +31,7 @@ function RegisterForm() {
       <PhoneField label="Phone number" />
       <label className="auth-label"><span>Email <em>(optional)</em></span><input name="email" type="email" autoComplete="email" className="auth-input" placeholder="you@example.com" /></label>
       <PasswordField autoComplete="new-password" minLength={8} label="Create password" hint="At least 8 characters" />
-      <SecurityQuestionField />
+      <SecurityQuestionField mandatory />
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="primary-button auth-submit" disabled={busy}>{busy ? "Creating account…" : "Create account"}</button>
       <p className="consent-note">By continuing, you agree to our <Link href="/policies/terms-and-conditions">Terms &amp; Conditions</Link> and <Link href="/policies/privacy-policy">Privacy Policy</Link>.</p>
