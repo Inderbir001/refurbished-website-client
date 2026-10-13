@@ -114,3 +114,17 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 /* ===== long marketplace-style product titles: keep tiles and rows tidy ===== */
 .offer-tile strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .product-card .product-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; text-overflow: clip; line-height: 1.35; min-height: 2.7em; }
+
+/* ===== product photos: clickable thumbnails, nothing cropped ===== */
+.gallery .main-image { position: relative; height: auto; aspect-ratio: 1 / 1; max-height: 640px; background: #fff; }
+.gallery .main-image img { object-fit: contain; }
+.gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .9); box-shadow: 0 4px 14px rgba(20, 33, 31, .2); font-size: 26px; line-height: 1; cursor: pointer; transition: background .2s, transform .2s; }
+.gallery-nav:hover { background: #fff; transform: translateY(-50%) scale(1.08); }
+.gallery-nav.prev { left: 12px; } .gallery-nav.next { right: 12px; }
+.gallery-count { position: absolute; right: 12px; bottom: 12px; z-index: 2; padding: 4px 10px; border-radius: 999px; background: rgba(20, 33, 31, .75); color: #fff; font: 600 12px 'DM Mono', monospace; }
+.gallery .thumbs { flex-wrap: wrap; gap: 8px; }
+.gallery .thumbs button { padding: 0; border: 2px solid transparent; border-radius: 12px; background: #fff; overflow: hidden; cursor: pointer; transition: border-color .2s, transform .25s; }
+.gallery .thumbs button:hover { transform: translateY(-3px); }
+.gallery .thumbs button.on { border-color: var(--orange); }
+.gallery .thumbs img { display: block; width: 66px; height: 66px; object-fit: contain; border-radius: 0; }
+@media (max-width: 560px) { .gallery .main-image { max-height: none; } .gallery .thumbs img { width: 56px; height: 56px; } }

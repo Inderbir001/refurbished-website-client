@@ -70,3 +70,18 @@ admin saves a change, so an edit shows on the store within moments, not after a 
 Render's nearest region is Singapore, one hop from Supabase's Mumbai database; that hop (not the app) is the remaining
 floor on page speed. If that ever needs closing, the backend is a plain Next.js app and can be redeployed to any host
 with a Mumbai region without other changes — not needed today.
+
+## Product photos in your own Supabase Storage
+
+Product photos should live in your own storage, not on another website.
+
+1. Supabase dashboard -> Storage: bucket `product-images` (public, 10 MB limit, images only). The deployment created it.
+2. Render -> `mobilenmore-api` -> Environment: set `SUPABASE_URL` (`https://<project-ref>.supabase.co`),
+   `SUPABASE_SERVICE_ROLE_KEY` (Supabase -> Project Settings -> API -> `service_role` secret) and
+   `STORAGE_BUCKET=product-images`. This is what turns on photo uploads in Admin -> Images. Never put the key on Vercel
+   or in the repo.
+3. Copy photos that still point at another website (for example the StoreHippo export) into the bucket:
+
+       SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... STORAGE_BUCKET=product-images DATABASE_URL=... \
+       npx tsx prisma/migrate-images.ts            # dry run: reachable? how big?
+       npx tsx prisma/migrate-images.ts --apply    # copy and repoint (safe to re-run)
