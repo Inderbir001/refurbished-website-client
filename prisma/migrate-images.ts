@@ -36,14 +36,14 @@ async function withRetry<T>(label: string, run: () => Promise<T>, tries = 3): Pr
 
 async function main() {
   if (apply && (!supabaseUrl || !serviceKey)) throw new Error("--apply needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in the environment.");
-  const rows = await db.productImage.findMany({ where: { product: { deletedAt: null } }, select: { id: true, url: true, position: true, product: { select: { sku: true } } }, orderBy: [{ productId: "asc" }, { position: "asc" }] });
+  const rows = await db.productImage.findMany({ where: {}, select: { id: true, url: true, position: true, product: { select: { sku: true } } }, orderBy: [{ productId: "asc" }, { position: "asc" }] });
   const external = rows.filter((r) => /^https?:\/\//i.test(r.url) && !(supabaseUrl && r.url.startsWith(ownPrefix)));
   const byUrl = new Map<string, { sku: string; position: number }>();
   for (const r of external) if (!byUrl.has(r.url)) byUrl.set(r.url, { sku: r.product.sku, position: r.position });
   const todo = [...byUrl.entries()].slice(0, Number.isFinite(limit) ? limit : undefined);
   const hosts = new Map<string, number>();
   for (const [u] of todo) hosts.set(new URL(u).host, (hosts.get(new URL(u).host) ?? 0) + 1);
-  console.log(`Images of live/draft products: ${rows.length} | already in our storage: ${rows.length - external.length} | to copy: ${todo.length} distinct file(s) from ${[...hosts].map(([h, n]) => `${h} (${n})`).join(", ") || "-"}`);
+  console.log(`Product images: ${rows.length} | already in our storage: ${rows.length - external.length} | to copy: ${todo.length} distinct file(s) from ${[...hosts].map(([h, n]) => `${h} (${n})`).join(", ") || "-"}`);
   if (!todo.length) return;
 
   if (!apply) {
