@@ -129,3 +129,4 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 .gallery .thumbs button.on { border-color: var(--orange); }
 .gallery .thumbs img { display: block; width: 66px; height: 66px; object-fit: contain; border-radius: 0; }
 @media (max-width: 560px) { .gallery .main-image { max-height: none; } .gallery .thumbs img { width: 56px; height: 56px; } }
+.product-card .rating .trust-line { color: #0f7a4d; font-weight: 600; }
