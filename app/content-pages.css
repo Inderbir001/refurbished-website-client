@@ -117,7 +117,8 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 
 /* ===== product photos: clickable thumbnails, nothing cropped ===== */
 .gallery .main-image { position: relative; height: auto; aspect-ratio: 1 / 1; max-height: 640px; background: #fff; }
-.gallery .main-image img { object-fit: contain; }
+.gallery .main-image img { object-fit: contain; transition: transform .12s ease-out; transform-origin: var(--zx, 50%) var(--zy, 50%); }
+@media (hover: hover) and (pointer: fine) { .gallery .main-image { cursor: zoom-in; } .gallery .main-image:hover img { transform: scale(2.4); } .gallery .main-image .gallery-nav, .gallery .main-image .gallery-count { cursor: pointer; } }
 .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; width: 42px; height: 42px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .9); box-shadow: 0 4px 14px rgba(20, 33, 31, .2); font-size: 26px; line-height: 1; cursor: pointer; transition: background .2s, transform .2s; }
 .gallery-nav:hover { background: #fff; transform: translateY(-50%) scale(1.08); }
 .gallery-nav.prev { left: 12px; } .gallery-nav.next { right: 12px; }
