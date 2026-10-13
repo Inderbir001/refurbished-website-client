@@ -130,3 +130,20 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 .gallery .thumbs img { display: block; width: 66px; height: 66px; object-fit: contain; border-radius: 0; }
 @media (max-width: 560px) { .gallery .main-image { max-height: none; } .gallery .thumbs img { width: 56px; height: 56px; } }
 .product-card .rating .trust-line { color: #0f7a4d; font-weight: 600; }
+
+/* ---------- product page: photo stays put on the left, the details scroll on the right ---------- */
+.card-specs { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; margin: 8px 0 0; }
+.card-specs span { padding: 2px 8px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #31413c; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.trust-strip { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 18px 0 0; padding: 0; }
+.trust-strip li { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.trust-strip b { font-size: 13px; color: var(--ink); }
+.trust-strip span { font-size: 12px; color: var(--muted); }
+@media (min-width: 901px) {
+  .product-detail { align-items: start; }
+  .product-detail > .gallery { grid-column: 1; grid-row: 1 / span 2; position: sticky; top: 172px; align-self: start; }
+  .product-detail > .gallery .main-image { max-height: 560px; }
+  .product-detail > .detail-copy { grid-column: 2; grid-row: 1; }
+  .product-detail > .detail-bottom { grid-column: 2; grid-row: 2; max-width: none; margin-top: 8px; }
+  .detail-bottom p { gap: 24px; }
+  .detail-bottom p b { min-width: 130px; }
+}

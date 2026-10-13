@@ -65,7 +65,8 @@ export const pageLoaders = {
   async product(args: { slug: string; token?: string }) {
     const [product, session] = await Promise.all([memo(`product:${args.slug}`, () => getProduct(args.slug)), args.token ? verifySessionLocally(args.token) : Promise.resolve(null)]);
     const canReview = product && session ? Boolean(await db.orderItem.findFirst({ where: { productId: product.id, order: { userId: session.sub, status: "DELIVERED", paymentStatus: "SUCCESS" } }, select: { id: true } })) : false;
-    return { product, canReview };
+    const policy = await memo("store-policy", async () => (await db.storeSettings.findFirst({ select: { returnDays: true, freeShippingThreshold: true } })) ?? { returnDays: 7, freeShippingThreshold: 49_900 });
+    return { product, canReview, policy };
   },
 };
 
