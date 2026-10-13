@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { inr } from "@/lib/money";
+import { AddressSearch, fillAddress } from "@/components/store/address-search";
 type Address = { id: string; name: string; phone: string; line1: string; line2: string | null; city: string; state: string; pincode: string; isDefault: boolean };
 type Gateway = { id: string; label: string; available: boolean; reason: string };
 type ShippingOption = { ruleId?: string; name: string; charge: number; estimatedDaysMin: number; estimatedDaysMax: number };
@@ -17,6 +18,7 @@ async function loadRazorpay() { if (window.Razorpay) return; await new Promise<v
 export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; gateways: Gateway[] }) {
   const router = useRouter();
   const idempotencyKey = useRef<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const firstGateway = gateways.find((item) => item.available)?.id ?? "";
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
   const [differentBilling, setDifferentBilling] = useState(false);
@@ -71,8 +73,9 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   }
 
   return <section className="checkout page-shell"><div><p className="eyebrow">CHECKOUT</p><h1>Delivery & payment</h1><p>Prices, stock, coupon, delivery, GST and payment state are rechecked on the server.</p>
-    <form onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)); }} className="checkout-form">
+    <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)); }} className="checkout-form">
       {addresses.length > 0 && <label className="wide-field">Saved address<select value={selectedAddress} onChange={(event) => setSelectedAddress(event.target.value)}><option value="new">Use a new address</option>{addresses.map((address) => <option key={address.id} value={address.id}>{address.name} — {address.line1}, {address.city}</option>)}</select></label>}
+      {selectedAddress === "new" && <AddressSearch onPick={(picked) => { fillAddress(formRef.current, picked); setManualState(picked.state); setManualPincode(picked.pincode); }} />}
       {selectedAddress === "new" && fields.map((field) => <label key={field}>{field === "line1" ? "Address" : field === "line2" ? "Address line 2" : field[0].toUpperCase() + field.slice(1)}<input required={field !== "line2"} name={field} placeholder={field === "pincode" ? "560001" : ""} onChange={field === "state" ? (event) => setManualState(event.target.value) : field === "pincode" ? (event) => setManualPincode(event.target.value) : undefined} /></label>)}
       <label className="wide-field checkbox-label"><input type="checkbox" checked={differentBilling} onChange={(event) => setDifferentBilling(event.target.checked)} /> Use a different billing address</label>
       {differentBilling && fields.map((field) => <label key={`billing_${field}`}>Billing {field.replace("line1", "address").replace("line2", "address line 2")}<input required={field !== "line2"} name={`billing_${field}`} /></label>)}

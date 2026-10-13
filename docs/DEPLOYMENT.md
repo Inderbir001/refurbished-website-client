@@ -85,3 +85,16 @@ Product photos should live in your own storage, not on another website.
        SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... STORAGE_BUCKET=product-images DATABASE_URL=... \
        npx tsx prisma/migrate-images.ts            # dry run: reachable? how big?
        npx tsx prisma/migrate-images.ts --apply    # copy and repoint (safe to re-run)
+
+## Address search at checkout (Google Places)
+
+The "Search your address" box at checkout and in Account -> Addresses fills in street, city, state and pincode.
+
+1. Google Cloud Console -> APIs & Services -> enable **Places API (New)**; create an API key.
+2. Restrict the key to **Places API (New)** only (API restrictions). Because the call is made from the backend, an IP
+   restriction is not practical on Render; the API restriction plus a daily quota/budget cap is the protection.
+3. Render -> `mobilenmore-api` -> Environment: `GOOGLE_PLACES_API_KEY`. Never on Vercel or in the repo.
+4. Without the key the box simply does not appear and the normal address fields work as before.
+
+The browser never sees the key: it calls `/api/places/autocomplete` and `/api/places/details`, which require a signed-in
+shopper and are rate limited (90 requests/minute per account).

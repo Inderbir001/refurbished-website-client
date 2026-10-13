@@ -31,6 +31,8 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS       # extra site addresses allowed to submit forms, e.g. the *.vercel.app alias (comma separated)
         sync: false
+      - key: GOOGLE_PLACES_API_KEY   # address search at checkout (Google Places API New); backend only
+        sync: false
       - key: RAZORPAY_KEY_ID
         sync: false
       - key: RAZORPAY_KEY_SECRET
