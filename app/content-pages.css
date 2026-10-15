@@ -156,3 +156,10 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 .address-suggestions li b { font-size: 14px; font-weight: 600; }
 .address-suggestions li span { font-size: 12px; color: var(--muted); font-weight: 400; }
 .address-suggestions li:hover, .address-suggestions li.on { background: #fff3ee; }
+
+/* single available payment method: shown as a fixed row instead of a one-option dropdown */
+.payment-fixed { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 600; }
+.payment-fixed > div { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+.payment-fixed > div b { font-size: 15px; }
+.payment-fixed > div b::before { content: "✓ "; color: #0f7a4d; }
+.payment-fixed > div small { color: var(--muted); font-weight: 400; margin: 0; }

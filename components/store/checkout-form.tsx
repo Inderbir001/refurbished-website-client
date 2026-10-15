@@ -19,7 +19,8 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const router = useRouter();
   const idempotencyKey = useRef<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const firstGateway = gateways.find((item) => item.available)?.id ?? "";
+  const availableGateways = gateways.filter((item) => item.available);
+  const firstGateway = availableGateways[0]?.id ?? "";
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
   const [differentBilling, setDifferentBilling] = useState(false);
   const [error, setError] = useState("");
@@ -83,10 +84,14 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
         ? <select value={shippingRuleId} onChange={(event) => setShippingRuleId(event.target.value)}>{shippingOptions.map((option) => <option key={option.ruleId ?? AUTO} value={option.ruleId ?? AUTO}>{option.name} — {option.charge === 0 ? "Free" : inr(option.charge)} · {option.estimatedDaysMin}-{option.estimatedDaysMax} days</option>)}</select>
         : <select disabled><option>{shippingLoading ? "Checking delivery options…" : shippingOptions[0] ? `${shippingOptions[0].name} — ${shippingOptions[0].charge === 0 ? "Free" : inr(shippingOptions[0].charge)} · ${shippingOptions[0].estimatedDaysMin}-${shippingOptions[0].estimatedDaysMax} days` : "Enter your address to see delivery options"}</option></select>}
       </label>
-      <label className="wide-field">Payment method<select name="gateway" defaultValue={firstGateway}>{gateways.map((gateway) => <option key={gateway.id} value={gateway.available ? gateway.id : ""} disabled={!gateway.available}>{gateway.label}{gateway.available ? "" : " — unavailable"}</option>)}</select></label>
-      <div className="gateway-help wide-field">{gateways.filter((item) => !item.available).map((item) => <small key={item.id}><b>{item.label}:</b> {item.reason}</small>)}</div>
+      {/* Only gateways the merchant has actually activated are offered; the others stay in the code and show up automatically once their credentials are added. */}
+      {availableGateways.length === 1
+        ? <div className="wide-field payment-fixed"><input type="hidden" name="gateway" value={availableGateways[0].id} /><span>Payment method</span><div><b>{availableGateways[0].label}</b><small>UPI, cards &amp; net banking</small></div></div>
+        : availableGateways.length > 1
+          ? <label className="wide-field">Payment method<select name="gateway" defaultValue={firstGateway}>{availableGateways.map((gateway) => <option key={gateway.id} value={gateway.id}>{gateway.label}</option>)}</select></label>
+          : <p className="form-error wide-field" role="alert">Online payment is not available right now. Please try again later.</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="primary-button" disabled={loading || !firstGateway}>{loading ? "Securing order…" : firstGateway ? "Continue to secure payment" : "Payment credentials required"}</button>
+      <button className="primary-button" disabled={loading || !firstGateway}>{loading ? "Securing order…" : firstGateway ? "Continue to secure payment" : "Payment unavailable"}</button>
       <p className="consent-note wide-field">By placing your order you agree to our <Link href="/policies/terms-and-conditions" target="_blank">Terms &amp; Conditions</Link>, <Link href="/policies/privacy-policy" target="_blank">Privacy Policy</Link> and <Link href="/policies/refund-policy" target="_blank">Returns &amp; Refunds Policy</Link>.</p>
     </form>
   </div><aside className="checkout-note"><b>Safe by design</b><p>No card number or CVV touches {brand.name}. Orders are paid only after server-side gateway verification or an authenticated webhook.</p><small>Unpaid stock reservations expire and are released automatically.</small></aside></section>;
