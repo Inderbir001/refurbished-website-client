@@ -475,6 +475,10 @@ model Order {
   shippingAddress   Json
   billingAddress    Json?
   couponCode        String?
+  buyerGstin        String?
+  buyerBusinessName String?
+  invoiceNumber     String?                @unique
+  invoiceIssuedAt   DateTime?
   internalNotes     String?                @db.Text
   items             OrderItem[]
   payments          Payment[]
@@ -762,4 +766,12 @@ model SiteContent {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// One running number per Indian financial year (e.g. "2627" = April 2026 to March 2027), so invoice numbers are
+// consecutive, unique and never reused, as GST requires.
+model InvoiceCounter {
+  id         String   @id
+  lastNumber Int      @default(0)
+  updatedAt  DateTime @updatedAt
 }

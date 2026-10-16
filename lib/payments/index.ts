@@ -6,6 +6,7 @@ import { PhonePeGateway } from "./phonepe";
 import { ConfiguredGateway } from "./unsupported";
 import { PaymentProvider } from "./types";
 import { queueOrderNotification } from "../notifications/service";
+import { ensureInvoiceNumber } from "../services/invoice-service";
 
 export function providerFor(gateway: PaymentGateway): PaymentProvider { if (gateway === PaymentGateway.RAZORPAY) return new RazorpayGateway(); if (gateway === PaymentGateway.PHONEPE) return new PhonePeGateway(); return new ConfiguredGateway(gateway, ["SNAPMIT_API_KEY", "SNAPMIT_SECRET"]); }
 export async function markPaymentSuccess(paymentId: string, transactionId: string, metadata: Record<string, string>) {
@@ -24,6 +25,7 @@ export async function markPaymentSuccess(paymentId: string, transactionId: strin
     if (payment.order.userId) { await tx.cartItem.deleteMany({ where: { cart: { userId: payment.order.userId } } }); await tx.cart.updateMany({ where: { userId: payment.order.userId }, data: { couponCode: null } }); }
     return { payment: updated, changed: true, userId: payment.order.userId, orderNumber: payment.order.orderNumber };
   });
+  if (result.changed) await ensureInvoiceNumber(result.payment.orderId).catch((error) => console.error("Invoice numbering failed", error));
   if (result.changed) await queueOrderNotification({ userId: result.userId, orderId: result.payment.orderId, template: "PAYMENT_CONFIRMED", payload: { orderNumber: result.orderNumber, amount: result.payment.amount } });
   return result.payment;
 }

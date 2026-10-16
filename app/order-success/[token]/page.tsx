@@ -95,6 +95,7 @@ export default async function OrderSuccess({ params }: { params: Promise<{ token
         <div className="receipt-actions no-print">
           <Link className="primary-button" href="/products">Continue shopping</Link>
           {owner && <Link className="secondary-button" href={`/account/orders/${order.id}`}>Track order</Link>}
+          {paid && owner && <Link className="secondary-button" href={`/account/orders/${order.id}/invoice`}>Invoice</Link>}
           {paid && <PrintButton />}
         </div>
         {!owner && paid && <p className="receipt-note no-print">Bookmark this page — it&apos;s your receipt. <Link href="/register">Create an account</Link> to track orders and reorder faster.</p>}

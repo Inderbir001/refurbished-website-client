@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { inr } from "@/lib/money";
 import { AddressSearch, fillAddress } from "@/components/store/address-search";
+import { isValidGstin, normalizeGstin } from "@/lib/gst";
 import { safeFetch } from "@/lib/safe-fetch";
 type Address = { id: string; name: string; phone: string; line1: string; line2: string | null; city: string; state: string; pincode: string; isDefault: boolean };
 type Gateway = { id: string; label: string; available: boolean; reason: string };
@@ -48,6 +49,7 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   }
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
   const [differentBilling, setDifferentBilling] = useState(false);
+  const [hasGst, setHasGst] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const selected = addresses.find((item) => item.id === selectedAddress);
@@ -82,9 +84,11 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
     const address = selected ?? Object.fromEntries(fields.map((name) => [name, form.get(name)]));
     const billingAddress = differentBilling ? Object.fromEntries(fields.map((name) => [name, form.get(`billing_${name}`)])) : undefined;
     const gateway = String(form.get("gateway"));
+    const gstin = hasGst ? normalizeGstin(String(form.get("gstin") ?? "")) : "";
     try {
       if (!gateway) throw new Error("No payment gateway is configured yet.");
-      const response = await safeFetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address, billingAddress, gateway, idempotencyKey: idempotencyKey.current, ...(chosenShipping?.ruleId ? { shippingRuleId: chosenShipping.ruleId } : {}) }) });
+      if (hasGst && !isValidGstin(gstin)) throw new Error("Please check the GST number. It should be 15 characters, like 29ABCDE1234F1Z5.");
+      const response = await safeFetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address, billingAddress, ...(hasGst ? { gst: { gstin, businessName: String(form.get("businessName") ?? "").trim() } } : {}), gateway, idempotencyKey: idempotencyKey.current, ...(chosenShipping?.ruleId ? { shippingRuleId: chosenShipping.ruleId } : {}) }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Checkout could not be started.");
       const paymentResponse = await safeFetch("/api/payments/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, confirmationToken: result.data.confirmationToken }) });
@@ -131,6 +135,8 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
             <div className="co-fields">{fields.map((field) => <label key={field} className={`co-field ${spans[field]}`}>{labels[field]}<input required={field !== "line2"} name={field} placeholder={holders[field] ?? ""} autoComplete={autos[field]} inputMode={field === "phone" || field === "pincode" ? "numeric" : undefined} maxLength={field === "pincode" ? 6 : undefined} onChange={field === "state" ? (event) => setManualState(event.target.value) : field === "pincode" ? (event) => setManualPincode(event.target.value) : undefined} /></label>)}</div>
           </>}
           <label className="co-check"><input type="checkbox" checked={differentBilling} onChange={(event) => setDifferentBilling(event.target.checked)} /> Billing address is different</label>
+          <label className="co-check"><input type="checkbox" checked={hasGst} onChange={(event) => setHasGst(event.target.checked)} /> I have a GST number (get a GST tax invoice for my business)</label>
+          {hasGst && <div className="co-fields"><label className="co-field s3">GST number (GSTIN)<input name="gstin" required placeholder="29ABCDE1234F1Z5" maxLength={15} autoComplete="off" style={{ textTransform: "uppercase" }} /></label><label className="co-field s3">Business name<input name="businessName" required placeholder="As registered with GST" autoComplete="organization" /></label></div>}
           {differentBilling && <div className="co-fields">{fields.map((field) => <label key={`billing_${field}`} className={`co-field ${spans[field]}`}>Billing {labels[field].toLowerCase()}<input required={field !== "line2"} name={`billing_${field}`} autoComplete={`billing ${autos[field]}`} /></label>)}</div>}
         </section>
 
