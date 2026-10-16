@@ -50,8 +50,13 @@ export class RazorpayGateway implements PaymentProvider {
     if (!secret || !signature) throw new AppError(400, "Webhook signature is missing.");
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
     if (!signaturesMatch(expected, signature)) throw new AppError(400, "Invalid webhook signature.");
-    const body = JSON.parse(payload) as { payload: { payment: { entity: { id: string; notes?: { paymentId?: string } } } }; event: string };
-    return { transactionId: body.payload.payment.entity.id, paymentId: body.payload.payment.entity.notes?.paymentId, status: body.event === "payment.captured" ? "SUCCESS" as const : "FAILED" as const };
+    const body = JSON.parse(payload) as { payload?: { payment?: { entity?: { id: string; notes?: { paymentId?: string } } } }; event?: string };
+    const entity = body.payload?.payment?.entity;
+    // Only a captured payment changes anything. Every other event (a single failed attempt the customer then retried,
+    // refunds, disputes, settlements...) is acknowledged and ignored: marking the order failed on one bad attempt would
+    // block the customer's successful retry.
+    if (!entity || (body.event !== "payment.captured" && body.event !== "order.paid")) return { transactionId: entity?.id ?? "", paymentId: undefined, status: "FAILED" as const };
+    return { transactionId: entity.id, paymentId: entity.notes?.paymentId, status: "SUCCESS" as const };
   }
 
   async getPaymentStatus(input: { paymentId: string; orderId: string; gatewayTransactionId?: string }) {
