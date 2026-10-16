@@ -45,18 +45,25 @@ export class RazorpayGateway implements PaymentProvider {
     return { transactionId: paymentId, metadata: { razorpayOrderId: orderId, razorpayState: payment.status } };
   }
 
-  async verifyWebhook(payload: string, signature?: string) {
+  async verifyWebhook(payload: string, signature?: string): ReturnType<PaymentProvider["verifyWebhook"]> {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret || !signature) throw new AppError(400, "Webhook signature is missing.");
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
     if (!signaturesMatch(expected, signature)) throw new AppError(400, "Invalid webhook signature.");
-    const body = JSON.parse(payload) as { payload?: { payment?: { entity?: { id: string; notes?: { paymentId?: string } } } }; event?: string };
+    type Entity = { id: string; payment_id?: string; amount?: number; status?: string; notes?: { paymentId?: string }; error_description?: string; reason_code?: string; phase?: string };
+    const body = JSON.parse(payload) as { payload?: { payment?: { entity?: Entity }; refund?: { entity?: Entity }; dispute?: { entity?: Entity } }; event?: string };
+    const event = body.event ?? "";
     const entity = body.payload?.payment?.entity;
-    // Only a captured payment changes anything. Every other event (a single failed attempt the customer then retried,
-    // refunds, disputes, settlements...) is acknowledged and ignored: marking the order failed on one bad attempt would
-    // block the customer's successful retry.
-    if (!entity || (body.event !== "payment.captured" && body.event !== "order.paid")) return { transactionId: entity?.id ?? "", paymentId: undefined, status: "FAILED" as const };
-    return { transactionId: entity.id, paymentId: entity.notes?.paymentId, status: "SUCCESS" as const };
+    // A captured payment confirms the order. Everything else is either recorded (see lib/payments/webhook-events.ts) or
+    // acknowledged and ignored; it never marks the order failed, because one failed attempt may be followed by a good retry.
+    if (entity && (event === "payment.captured" || event === "order.paid")) return { transactionId: entity.id, paymentId: entity.notes?.paymentId, status: "SUCCESS" as const };
+    const ignored = { transactionId: entity?.id ?? "", paymentId: undefined, status: "FAILED" as const };
+    if (event === "payment.failed" && entity) return { ...ignored, paymentId: entity.notes?.paymentId, event: { kind: "attempt_failed" as const, attemptId: entity.id, reason: entity.error_description } };
+    const refund = body.payload?.refund?.entity;
+    if (refund && (event === "refund.created" || event === "refund.processed" || event === "refund.failed")) return { ...ignored, event: { kind: "refund" as const, gatewayRefundId: refund.id, gatewayPaymentId: refund.payment_id ?? entity?.id, status: event === "refund.processed" ? "SUCCESS" as const : event === "refund.failed" ? "FAILED" as const : "PROCESSING" as const } };
+    const dispute = body.payload?.dispute?.entity;
+    if (dispute && event.startsWith("payment.dispute.")) return { ...ignored, event: { kind: "dispute" as const, name: event.replace("payment.dispute.", ""), disputeId: dispute.id, gatewayPaymentId: dispute.payment_id ?? entity?.id, amount: dispute.amount, reason: dispute.reason_code, phase: dispute.phase, status: dispute.status } };
+    return ignored;
   }
 
   async getPaymentStatus(input: { paymentId: string; orderId: string; gatewayTransactionId?: string }) {
