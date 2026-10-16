@@ -1,4 +1,4 @@
-import { InventoryReason, ProductCondition, ProductStatus } from "@prisma/client";
+import { InventoryReason, Prisma, ProductCondition, ProductStatus } from "@prisma/client";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
@@ -14,6 +14,8 @@ const schema = z.object({
   salePrice: z.number().int().positive().optional(), condition: z.nativeEnum(ProductCondition),
   categoryId: optionalCuid, brandId: optionalCuid, warrantyMonths: z.number().int().min(0).max(60).default(0),
   variantTitle: z.string().trim().min(1).default("Standard"), stock: z.number().int().min(0), imageUrl: optionalUrl,
+  images: z.array(z.string().url()).max(20).optional(), lowStockThreshold: z.number().int().min(0).max(100000).default(2),
+  status: z.enum(["ACTIVE", "DRAFT"]).default("ACTIVE"), grade: z.string().trim().max(40).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -21,15 +23,16 @@ export async function POST(request: NextRequest) {
     const admin = await requireAdmin(request);
     const input = schema.parse(await request.json());
     assertValidProductPricing(input);
+    const photos = input.images?.length ? input.images : input.imageUrl ? [input.imageUrl] : [];
     const product = await db.$transaction(async (tx) => {
       const created = await tx.product.create({
         data: {
           storeId: input.storeId, name: input.name, slug: input.slug, description: input.description,
           sku: input.sku, basePrice: input.basePrice, salePrice: input.salePrice, condition: input.condition,
           categoryId: input.categoryId, brandId: input.brandId, warrantyMonths: input.warrantyMonths,
-          status: ProductStatus.ACTIVE,
-          variants: { create: { title: input.variantTitle, sku: `${input.sku}-DEFAULT`, stock: input.stock } },
-          images: input.imageUrl ? { create: { url: input.imageUrl, alt: input.name } } : undefined,
+          status: input.status === "DRAFT" ? ProductStatus.DRAFT : ProductStatus.ACTIVE, grade: input.grade,
+          variants: { create: { title: input.variantTitle, sku: `${input.sku}-DEFAULT`, stock: input.stock, lowStockThreshold: input.lowStockThreshold } },
+          images: photos.length ? { create: photos.map((url, position) => ({ url, alt: input.name, position })) } : undefined,
         },
         include: { variants: true },
       });
@@ -39,5 +42,9 @@ export async function POST(request: NextRequest) {
       return created;
     });
     return json(product, 201);
-  } catch (error) { return apiError(error); }
+  } catch (error) {
+    // The web address and the product code must be unique: say so plainly instead of a generic failure.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return apiError(new AppError(409, "A product with this web address or product code already exists. Change the name, or open “Advanced” and edit them."));
+    return apiError(error);
+  }
 }

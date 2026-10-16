@@ -3,6 +3,7 @@ import { Role } from "@prisma/client";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { currentSession } from "@/lib/auth";
 import "../admin-ui.css";
+import "../admin-clean.css";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
 
 const staff: Role[] = [Role.SUPER_ADMIN, Role.ADMIN, Role.PRODUCT_MANAGER, Role.ORDER_MANAGER];
