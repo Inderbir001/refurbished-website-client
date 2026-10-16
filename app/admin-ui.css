@@ -301,3 +301,31 @@
   .ship-price { grid-column: 1; } .ship-switch { grid-column: 2; grid-row: 1; } .ship-actions { grid-column: 1 / -1; }
   .ship-grid, .ship-states { grid-template-columns: 1fr; }
 }
+
+/* ---------- photo pickers (upload instead of pasting links) ---------- */
+.imgf { display: grid; gap: 8px; position: relative; font-size: 13px; }
+.imgf-label { font-weight: 600; color: #31413c; }
+.imgf-box { display: flex; align-items: center; gap: 14px; padding: 12px; border: 1.5px dashed var(--line); border-radius: 14px; background: #fbfbf8; }
+.imgf-preview { flex: none; width: 84px; height: 84px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; font-size: 26px; color: #b9c2bd; }
+.imgf-preview img { width: 100%; height: 100%; object-fit: contain; }
+.imgf-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; position: relative; }
+.imgf-actions .secondary-button { padding: 10px 16px; }
+.imgf-link { border: 0; background: none; padding: 0; color: var(--orange); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline; justify-self: start; }
+.imgf-link.small { color: var(--muted); font-weight: 600; }
+.imgf-url, .imgf-paste input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; font: 500 13px 'DM Sans', sans-serif; }
+.imgf-hint { color: var(--muted); font-size: 12px; font-weight: 400; }
+.imgf-error { color: #b3351b; font-size: 12px; font-weight: 600; }
+.imgf-proxy { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+.imgf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.imgf-grid figure { position: relative; margin: 0; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: hidden; }
+.imgf-grid figure img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; }
+.imgf-grid figure em { position: absolute; top: 6px; left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: #fff; font: 700 10px 'DM Sans', sans-serif; font-style: normal; }
+.imgf-grid figcaption { display: flex; justify-content: center; gap: 4px; padding: 6px; border-top: 1px solid var(--line); background: #fbfbf8; }
+.imgf-grid figcaption button { width: 28px; height: 26px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; line-height: 1; }
+.imgf-grid figcaption button:disabled { opacity: .35; cursor: default; }
+.imgf-grid figcaption .del { color: #b3351b; }
+.imgf-add { display: grid; place-items: center; align-content: center; gap: 2px; min-height: 140px; border: 1.5px dashed var(--orange); border-radius: 12px; background: #fff8f5; color: var(--orange); font-weight: 700; cursor: pointer; }
+.imgf-add b { font-size: 26px; line-height: 1; }
+.imgf-add:disabled { opacity: .6; cursor: wait; }
+.imgf-paste { display: flex; gap: 8px; }
+.imgf-paste .secondary-button { padding: 9px 16px; }

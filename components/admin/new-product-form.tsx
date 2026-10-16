@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { safeFetch } from "@/lib/safe-fetch";
+import { ImageField, ImageListField } from "@/components/admin/image-field";
 type Option = { id: string; name: string };
 export function NewProductForm({ storeId, categories, brands }: { storeId: string; categories: Option[]; brands: Option[] }) { const [message, setMessage] = useState(""); const formRef = useRef<HTMLFormElement>(null); async function save(form: FormData) { const value = Object.fromEntries(form); const response = await safeFetch("/api/admin/products", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...value, storeId, basePrice: Math.round(Number(value.basePrice) * 100), salePrice: value.salePrice ? Math.round(Number(value.salePrice) * 100) : undefined, stock: Number(value.stock), warrantyMonths: Number(value.warrantyMonths) }) }); const data = await response.json(); setMessage(response.ok ? `Saved ${data.data.name}. It is now live in the storefront.` : data.error ?? "Could not save product."); if (response.ok) { formRef.current?.reset(); const slug = formRef.current?.elements.namedItem("slug") as HTMLInputElement | null; if (slug) slug.dataset.edited = ""; } }
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -19,7 +20,7 @@ const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-
       <div className="form-columns"><label>Variant name<input name="variantTitle" defaultValue="Standard" required /></label><label>Warranty (months)<input name="warrantyMonths" type="number" min="0" defaultValue="6" /></label></div>
     </fieldset>
     <fieldset><legend>4 · Photo</legend>
-      <label>Photo link<input name="imageUrl" type="url" placeholder="https://…" /><small className="hint">Paste an image link, or add photos later from the product page.</small></label>
+      <ImageField name="imageUrl" label="Photo" hint="You can add more photos later from the product page." />
     </fieldset>
     <button className="primary-button">Publish product</button>{message && <p aria-live="polite">{message}</p>}
   </form> }

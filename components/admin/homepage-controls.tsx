@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeFetch } from "@/lib/safe-fetch";
+import { ImageField, ImageListField } from "@/components/admin/image-field";
 
 type Section = { id: string; type: string; title: string; subtitle: string; position: number; isVisible: boolean };
 type Banner = { id: string; title: string; subtitle: string; imageUrl: string; linkUrl: string; position: number; isVisible: boolean };
@@ -85,7 +86,7 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
       <details className="hp-add"><summary>+ Add a banner</summary>
         <form onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const added = await call("/api/admin/homepage", "POST", { title: data.get("title"), subtitle: data.get("subtitle") || undefined, imageUrl: data.get("imageUrl"), linkUrl: data.get("linkUrl") || undefined, position: banners.length, isVisible: true }, "Banner added."); if (added?.data) { const row = added.data as { id: string; title: string; subtitle?: string | null; imageUrl: string; linkUrl?: string | null; position: number; isVisible: boolean }; setBanners((list) => [...list, { id: row.id, title: row.title, subtitle: row.subtitle ?? "", imageUrl: row.imageUrl, linkUrl: row.linkUrl ?? "", position: row.position, isVisible: row.isVisible }]); form.reset(); } }}>
           <label>Title<input name="title" required /></label>
-          <label>Picture link<input name="imageUrl" type="url" required placeholder="https://…" /></label>
+          <ImageField name="imageUrl" label="Banner picture" required hint="Wide pictures look best, about 1600 × 600." />
           <label>Small text (optional)<input name="subtitle" /></label>
           <label>Opens which page (optional)<input name="linkUrl" placeholder="/products" /></label>
           <button className="primary-button" disabled={busy}>Add banner</button>
