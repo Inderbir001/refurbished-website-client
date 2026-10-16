@@ -218,8 +218,9 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 .co-secure a { text-decoration: underline; }
 @media (max-width: 900px) {
   .co-layout { grid-template-columns: 1fr; }
-  .co-summary { position: static; }
-  .co-summary-pay { display: none; }
+  .co-summary { position: static; order: -1; }
+  .co-items { max-height: 170px; }
+
 }
 @media (max-width: 560px) {
   .co-card { padding: 18px 16px; }
@@ -227,3 +228,14 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
   .co-methods { grid-template-columns: 1fr; }
   .co-option { grid-template-columns: 1fr auto; } .co-option span { grid-column: 1; }
 }
+.co-coupon { margin: 0 0 14px; }
+.co-coupon form { display: flex; align-items: stretch; border: 1.5px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+.co-coupon form:focus-within { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(251, 107, 72, .16); }
+.co-coupon input { min-width: 0; flex: 1; padding: 12px 14px; border: 0; background: transparent; font: 600 13px 'DM Sans', sans-serif; letter-spacing: .04em; color: var(--ink); }
+.co-coupon input::placeholder { font-weight: 400; letter-spacing: 0; color: var(--muted); }
+.co-coupon input:focus { outline: none; }
+.co-coupon form button { border: 0; padding: 0 18px; background: var(--ink); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer; }
+.co-coupon form button:disabled { background: #a0aaa5; cursor: not-allowed; }
+.co-coupon-on { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 11px 14px; border: 1.5px dashed #0f7a4d; border-radius: 12px; background: #f1faf5; font-size: 13px; color: #0f5d3a; }
+.co-coupon .link-button { border: 0; background: none; padding: 0; color: var(--orange); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline; }
+.co-coupon-error { margin: 8px 2px 0; font-size: 12px; color: #b3351b; line-height: 1.4; }

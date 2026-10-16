@@ -12,7 +12,7 @@ type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; 
 type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; prefill: { name: string; contact: string }; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void }; method?: Record<string, boolean>; theme?: { color: string } };
 declare global { interface Window { Razorpay: new (options: RazorpayOptions) => { open(): void } } }
 type PayMethod = "upi" | "card" | "netbanking" | "wallet";
-type CartView = { items: { id: string; quantity: number; product: { name: string; images: { url: string }[] }; variant: { title: string } | null }[]; totals: { subtotal: number; discount: number; tax: number; shipping: number; total: number; couponCode?: string | null } };
+type CartView = { items: { id: string; quantity: number; product: { name: string; images: { url: string }[] }; variant: { title: string } | null }[]; totals: { subtotal: number; discount: number; tax: number; shipping: number; total: number; couponCode?: string | null; couponError?: string } };
 const fields = ["name", "phone", "line1", "line2", "city", "state", "pincode"] as const;
 const AUTO = "__auto__";
 async function loadRazorpay() { if (window.Razorpay) return; await new Promise<void>((resolve, reject) => { const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]'); if (existing) { existing.addEventListener("load", () => resolve(), { once: true }); return; } const script = document.createElement("script"); script.src = "https://checkout.razorpay.com/v1/checkout.js"; script.onload = () => resolve(); script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded.")); document.head.appendChild(script); }); }
@@ -27,6 +27,24 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const [method, setMethod] = useState<PayMethod>("upi");
   const [cart, setCart] = useState<CartView | null>(null);
   useEffect(() => { fetch("/api/cart").then((response) => response.json()).then((result) => setCart(result.data)).catch(() => setCart(null)); }, []);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
+  const [couponBusy, setCouponBusy] = useState(false);
+  async function applyCoupon() {
+    setCouponBusy(true); setCouponMessage("");
+    try {
+      const response = await fetch("/api/cart/coupon", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: couponInput.trim() }) });
+      const result = await response.json();
+      if (!response.ok) setCouponMessage(result.error ?? "That coupon could not be applied.");
+      else { setCart(result.data); setCouponInput(""); }
+    } catch { setCouponMessage("Could not apply the coupon. Please try again."); }
+    setCouponBusy(false);
+  }
+  async function removeCoupon() {
+    setCouponBusy(true); setCouponMessage("");
+    try { await fetch("/api/cart/coupon", { method: "DELETE" }); const result = await (await fetch("/api/cart")).json(); setCart(result.data); } catch { setCouponMessage("Could not remove the coupon."); }
+    setCouponBusy(false);
+  }
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
   const [differentBilling, setDifferentBilling] = useState(false);
   const [error, setError] = useState("");
@@ -142,6 +160,13 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
         <h2>Order summary</h2>
         {!cart ? <p className="co-hint">Loading your order…</p> : <>
           <ul className="co-items">{items.map((item) => <li key={item.id}><div className="co-thumb">{item.product.images[0] ? <img src={item.product.images[0].url} alt="" /> : null}<em>{item.quantity}</em></div><div><b>{item.product.name}</b>{item.variant?.title && item.variant.title !== "Standard" && <small>{item.variant.title}</small>}</div></li>)}</ul>
+          <div className="co-coupon">
+            {totals!.couponCode && !totals!.couponError
+              ? <p className="co-coupon-on"><span>🏷 <b>{totals!.couponCode}</b> applied</span><button type="button" className="link-button" disabled={couponBusy} onClick={removeCoupon}>Remove</button></p>
+              : <form onSubmit={(event) => { event.preventDefault(); void applyCoupon(); }}><input value={couponInput} onChange={(event) => { setCouponInput(event.target.value.toUpperCase()); setCouponMessage(""); }} placeholder="Have a coupon code?" aria-label="Coupon code" autoComplete="off" /><button disabled={couponBusy || !couponInput.trim()}>{couponBusy ? "…" : "Apply"}</button></form>}
+            {totals!.couponError && <p className="co-coupon-error">{totals!.couponError} <button type="button" className="link-button" disabled={couponBusy} onClick={removeCoupon}>Remove it</button></p>}
+            {couponMessage && <p className="co-coupon-error">{couponMessage}</p>}
+          </div>
           <div className="co-rows">
             <p><span>Subtotal</span><b>{inr(totals!.subtotal)}</b></p>
             {totals!.discount > 0 && <p className="save"><span>Discount{totals!.couponCode ? ` (${totals!.couponCode})` : ""}</span><b>−{inr(totals!.discount)}</b></p>}
@@ -149,7 +174,6 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
             <p><span>Delivery</span><b>{delivery ? inr(delivery) : "Free"}</b></p>
             <p className="total"><span>Total</span><b>{inr(payable)}</b></p>
           </div>
-          <div className="co-summary-pay">{placeButton("pay-side")}</div>
           <p className="co-secure">🔒 Payments are processed by Razorpay. No card number or CVV touches {brand.name}, and orders are confirmed only after the payment is verified. <Link href="/cart">Edit cart</Link></p>
         </>}
       </aside>
