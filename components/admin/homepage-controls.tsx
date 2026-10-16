@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type Section = { id: string; type: string; title: string; subtitle: string; position: number; isVisible: boolean };
 type Banner = { id: string; title: string; subtitle: string; imageUrl: string; linkUrl: string; position: number; isVisible: boolean };
@@ -30,7 +31,7 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
 
   async function call(url: string, method: string, body: unknown, done: string) {
     setBusy(true); setNote(null);
-    const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const response = await safeFetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     setBusy(false);
     setNote({ ok: response.ok, text: response.ok ? done : result.error ?? "Something went wrong." });

@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { brand } from "@/lib/brand";
 import { AuthShell, authPerks } from "@/components/store/auth-shell";
 import { PasswordField, PhoneField } from "@/components/store/auth-fields";
+import { safeFetch } from "@/lib/safe-fetch";
 
 // Only send people to pages on this site after signing in.
 const safeNext = (value: string | null) => (value && value.startsWith("/") && !value.startsWith("//") ? value : null);
@@ -19,7 +20,7 @@ function LoginForm() {
     if (busy) return;
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: form.get(useEmail ? "email" : "phone"), password: form.get("password") }) });
+      const response = await safeFetch("/api/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: form.get(useEmail ? "email" : "phone"), password: form.get("password") }) });
       const data = await response.json();
       if (!response.ok) { setError(data.error ?? "Could not sign in."); setBusy(false); return; }
       router.push(data.data.role === "CUSTOMER" ? (next ?? "/") : "/admin");

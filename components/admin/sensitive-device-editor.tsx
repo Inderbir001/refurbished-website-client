@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type Variant = { id: string; title: string; sku: string };
 type RecordValue = { variantId: string; imei?: string | null; batteryHealth?: number | null; repairHistory?: string | null; deviceCondition?: string | null; screenCondition?: string | null; bodyCondition?: string | null; accessoriesIncluded?: string | null; refurbishmentDetails?: string | null; activationStatus?: string | null };
@@ -9,7 +10,7 @@ export function SensitiveDeviceEditor({ productId, variants }: { productId: stri
   const [records, setRecords] = useState<Record<string, RecordValue> | null>(null);
   const [message, setMessage] = useState("");
   async function load() {
-    const response = await fetch(`/api/admin/products/${productId}/sensitive`);
+    const response = await safeFetch(`/api/admin/products/${productId}/sensitive`);
     const result = await response.json();
     if (!response.ok) { setMessage(result.error ?? "Sensitive device records could not be loaded."); return; }
     setRecords(Object.fromEntries(result.data.map((item: RecordValue) => [item.variantId, item])));
@@ -18,7 +19,7 @@ export function SensitiveDeviceEditor({ productId, variants }: { productId: stri
   async function save(form: FormData, variantId: string) {
     const number = form.get("batteryHealth");
     const body = { variantId, imei: form.get("imei"), batteryHealth: number ? Number(number) : undefined, repairHistory: form.get("repairHistory"), deviceCondition: form.get("deviceCondition"), screenCondition: form.get("screenCondition"), bodyCondition: form.get("bodyCondition"), accessoriesIncluded: form.get("accessoriesIncluded"), refurbishmentDetails: form.get("refurbishmentDetails"), activationStatus: form.get("activationStatus") };
-    const response = await fetch(`/api/admin/products/${productId}/sensitive`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const response = await safeFetch(`/api/admin/products/${productId}/sensitive`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     setMessage(response.ok ? "Encrypted device details saved and audited." : result.error ?? "Device details could not be saved.");
     if (response.ok) await load();

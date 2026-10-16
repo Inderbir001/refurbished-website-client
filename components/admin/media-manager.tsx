@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type Asset = { id: string; name: string; url: string; alt: string | null; mimeType: string; sizeBytes: number };
 
@@ -10,14 +11,14 @@ export function MediaManager({ assets, configured }: { assets: Asset[]; configur
   const [message, setMessage] = useState("");
   async function upload(form: FormData) {
     setMessage("Uploading…");
-    const response = await fetch("/api/admin/media", { method: "POST", body: form });
+    const response = await safeFetch("/api/admin/media", { method: "POST", body: form });
     const result = await response.json();
     setMessage(response.ok ? "Image uploaded." : result.error ?? "Upload failed.");
     if (response.ok) router.refresh();
   }
   async function remove(id: string) {
     if (!confirm("Delete this media asset from storage?")) return;
-    const response = await fetch(`/api/admin/media?id=${id}`, { method: "DELETE" });
+    const response = await safeFetch(`/api/admin/media?id=${id}`, { method: "DELETE" });
     const result = await response.json();
     setMessage(response.ok ? "Image deleted." : result.error ?? "Delete failed.");
     if (response.ok) router.refresh();

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SECURITY_QUESTIONS } from "@/lib/security-questions";
+import { safeFetch } from "@/lib/safe-fetch";
 
 const CUSTOM = "__custom__";
 
@@ -14,12 +15,12 @@ export function ProfileForm({ name, phone, securityQuestion }: { name: string; p
   async function save(form: FormData) {
     const body: Record<string, FormDataEntryValue> = {};
     for (const [key, value] of form) if (value !== "") body[key] = value;
-    const response = await fetch("/api/account/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const response = await safeFetch("/api/account/profile", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     setMessage(response.ok ? "Profile saved." : result.error ?? "Could not save profile.");
     if (response.ok) { setEditingSecurity(!result.data.securityQuestion); router.refresh(); }
   }
-  async function logout() { await fetch("/api/auth/logout", { method: "POST" }); router.push("/"); router.refresh(); }
+  async function logout() { await safeFetch("/api/auth/logout", { method: "POST" }); router.push("/"); router.refresh(); }
 
   return <div className="profile-grid">
     <form onSubmit={(event) => { event.preventDefault(); void save(new FormData(event.currentTarget)); }} className="product-form">

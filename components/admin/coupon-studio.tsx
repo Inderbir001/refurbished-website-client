@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { inr } from "@/lib/money";
+import { safeFetch } from "@/lib/safe-fetch";
 
 export type CouponRow = { id: string; code: string; type: "PERCENTAGE" | "FIXED"; value: number; minimumOrder: number | null; maximumDiscount: number | null; expiresAt: string | null; isActive: boolean; usedCount: number; usageLimit: number | null; firstOrderOnly: boolean; scopeType: string };
 type Note = { ok: boolean; text: string } | null;
@@ -29,7 +30,7 @@ export function CouponStudio({ initial }: { initial: CouponRow[] }) {
 
   async function toggle(coupon: CouponRow) {
     setBusy(true); setNote(null);
-    const response = await fetch("/api/admin/coupons", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: coupon.id, isActive: !coupon.isActive }) });
+    const response = await safeFetch("/api/admin/coupons", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: coupon.id, isActive: !coupon.isActive }) });
     const result = await response.json();
     setBusy(false);
     if (!response.ok) { setNote({ ok: false, text: result.error ?? "Could not update the coupon." }); return; }
@@ -50,7 +51,7 @@ export function CouponStudio({ initial }: { initial: CouponRow[] }) {
     if (type === "PERCENTAGE" && form.get("maximum")) body.maximumDiscount = paise(String(form.get("maximum")));
     if (expires) body.expiresAt = new Date(`${expires}T23:59:59+05:30`).toISOString();
     setBusy(true); setNote(null);
-    const response = await fetch("/api/admin/coupons", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const response = await safeFetch("/api/admin/coupons", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     setBusy(false);
     if (!response.ok) { setNote({ ok: false, text: result.error ?? "Could not create the coupon." }); return false; }

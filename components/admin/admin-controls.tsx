@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductPicker } from "@/components/admin/product-picker";
+import { safeFetch } from "@/lib/safe-fetch";
 
-function useSubmit() { const router = useRouter(); const [message, setMessage] = useState(""); async function send(url: string, method: string, body: unknown) { const response = await fetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const result = await response.json(); setMessage(response.ok ? "Saved successfully." : result.error ?? "Could not save."); if (response.ok) router.refresh(); return response.ok; } return { send, message }; }
+function useSubmit() { const router = useRouter(); const [message, setMessage] = useState(""); async function send(url: string, method: string, body: unknown) { const response = await safeFetch(url, { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) }); const result = await response.json(); setMessage(response.ok ? "Saved successfully." : result.error ?? "Could not save."); if (response.ok) router.refresh(); return response.ok; } return { send, message }; }
 const bool = (value: FormDataEntryValue | null) => value === "on";
 const paise = (value: FormDataEntryValue | null) => value ? Math.round(Number(value) * 100) : undefined;
 

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Announcement } from "@/lib/site-content";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type Note = { ok: boolean; text: string } | null;
 
@@ -16,7 +17,7 @@ export function AnnouncementEditor({ initial, defaults, canEdit }: { initial: An
 
   async function call(method: "PATCH" | "DELETE", body: unknown, done: string) {
     setBusy(true); setNote(null);
-    const response = await fetch("/api/admin/site-content", { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const response = await safeFetch("/api/admin/site-content", { method, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     const result = await response.json();
     setBusy(false);
     setNote({ ok: response.ok, text: response.ok ? done : result.error ?? "Could not save." });

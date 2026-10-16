@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { AuthShell, authPerks } from "@/components/store/auth-shell";
 import { PasswordField, PhoneField } from "@/components/store/auth-fields";
 import { SecurityQuestionField } from "@/components/store/security-question-field";
+import { safeFetch } from "@/lib/safe-fetch";
 
 const safeNext = (value: string | null) => (value && value.startsWith("/") && !value.startsWith("//") ? value : null);
 
@@ -17,7 +18,7 @@ function RegisterForm() {
     if (busy) return;
     setBusy(true); setError("");
     try {
-      const response = await fetch("/api/auth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(form)) });
+      const response = await safeFetch("/api/auth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(form)) });
       const data = await response.json();
       if (!response.ok) { setError(data.error ?? "Could not create the account."); setBusy(false); return; }
       router.push(next ?? "/"); router.refresh();

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
 import { inr } from "@/lib/money";
 import { AddressSearch, fillAddress } from "@/components/store/address-search";
+import { safeFetch } from "@/lib/safe-fetch";
 type Address = { id: string; name: string; phone: string; line1: string; line2: string | null; city: string; state: string; pincode: string; isDefault: boolean };
 type Gateway = { id: string; label: string; available: boolean; reason: string };
 type ShippingOption = { ruleId?: string; name: string; charge: number; estimatedDaysMin: number; estimatedDaysMax: number };
@@ -26,14 +27,14 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const [gateway, setGateway] = useState(firstGateway);
   const [method, setMethod] = useState<PayMethod>("upi");
   const [cart, setCart] = useState<CartView | null>(null);
-  useEffect(() => { fetch("/api/cart").then((response) => response.json()).then((result) => setCart(result.data)).catch(() => setCart(null)); }, []);
+  useEffect(() => { safeFetch("/api/cart").then((response) => response.json()).then((result) => setCart(result.data)).catch(() => setCart(null)); }, []);
   const [couponInput, setCouponInput] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
   const [couponBusy, setCouponBusy] = useState(false);
   async function applyCoupon() {
     setCouponBusy(true); setCouponMessage("");
     try {
-      const response = await fetch("/api/cart/coupon", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: couponInput.trim() }) });
+      const response = await safeFetch("/api/cart/coupon", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: couponInput.trim() }) });
       const result = await response.json();
       if (!response.ok) setCouponMessage(result.error ?? "That coupon could not be applied.");
       else { setCart(result.data); setCouponInput(""); }
@@ -42,7 +43,7 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   }
   async function removeCoupon() {
     setCouponBusy(true); setCouponMessage("");
-    try { await fetch("/api/cart/coupon", { method: "DELETE" }); const result = await (await fetch("/api/cart")).json(); setCart(result.data); } catch { setCouponMessage("Could not remove the coupon."); }
+    try { await safeFetch("/api/cart/coupon", { method: "DELETE" }); const result = await (await safeFetch("/api/cart")).json(); setCart(result.data); } catch { setCouponMessage("Could not remove the coupon."); }
     setCouponBusy(false);
   }
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
@@ -65,7 +66,7 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
     const requestId = ++shippingRequest.current;
     setShippingLoading(true);
     const timer = setTimeout(() => {
-      fetch("/api/checkout/shipping-options", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state: effectiveState, pincode: effectivePincode }) })
+      safeFetch("/api/checkout/shipping-options", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ state: effectiveState, pincode: effectivePincode }) })
         .then((response) => response.json())
         .then((result) => { if (requestId !== shippingRequest.current) return; const options: ShippingOption[] = result.data?.options ?? []; setShippingOptions(options); setShippingRuleId(options.length > 1 ? (options[0].ruleId ?? AUTO) : AUTO); })
         .catch(() => { if (requestId === shippingRequest.current) setShippingOptions([]); })
@@ -83,17 +84,17 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
     const gateway = String(form.get("gateway"));
     try {
       if (!gateway) throw new Error("No payment gateway is configured yet.");
-      const response = await fetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address, billingAddress, gateway, idempotencyKey: idempotencyKey.current, ...(chosenShipping?.ruleId ? { shippingRuleId: chosenShipping.ruleId } : {}) }) });
+      const response = await safeFetch("/api/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address, billingAddress, gateway, idempotencyKey: idempotencyKey.current, ...(chosenShipping?.ruleId ? { shippingRuleId: chosenShipping.ruleId } : {}) }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Checkout could not be started.");
-      const paymentResponse = await fetch("/api/payments/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, confirmationToken: result.data.confirmationToken }) });
+      const paymentResponse = await safeFetch("/api/payments/create", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, confirmationToken: result.data.confirmationToken }) });
       const intent = await paymentResponse.json();
       if (!paymentResponse.ok) throw new Error(intent.error ?? "Payment gateway is unavailable.");
       if (gateway === "PHONEPE") { if (!intent.data.redirectUrl) throw new Error("PhonePe returned no checkout URL."); window.location.assign(intent.data.redirectUrl); return; }
       if (gateway !== "RAZORPAY") throw new Error("This payment method is awaiting merchant activation.");
       await loadRazorpay();
       const checkoutData = intent.data.checkoutData as { key: string; razorpayOrderId: string };
-      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, theme: { color: "#fb6b48" }, method: { upi: method === "upi", card: method === "card", netbanking: method === "netbanking", wallet: method === "wallet", emi: false, paylater: false }, handler: async (gatewayResult) => { const verification = await fetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
+      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, theme: { color: "#fb6b48" }, method: { upi: method === "upi", card: method === "card", netbanking: method === "netbanking", wallet: method === "wallet", emi: false, paylater: false }, handler: async (gatewayResult) => { const verification = await safeFetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
     } catch (caught) { setLoading(false); setError(caught instanceof Error ? caught.message : "Payment could not be started."); }
   }
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AuthShell, authPerks } from "@/components/store/auth-shell";
 import { PhoneField } from "@/components/store/auth-fields";
+import { safeFetch } from "@/lib/safe-fetch";
 
 type Step = "identify" | "no-question" | "answer";
 
@@ -20,7 +21,7 @@ export default function ForgotPassword() {
   async function submitEmail(form: FormData) {
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/auth/password-reset/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: form.get("email") }) });
+      const response = await safeFetch("/api/auth/password-reset/request", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: form.get("email") }) });
       const result = await response.json();
       setMessage(response.ok ? "If the account exists, a reset notification has been queued." : result.error);
       setUrl(result.data?.developmentResetUrl ?? "");
@@ -31,7 +32,7 @@ export default function ForgotPassword() {
     setBusy(true); setMessage("");
     const phone = "+91" + form.get("phone");
     try {
-      const response = await fetch("/api/auth/password-reset/question", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: phone }) });
+      const response = await safeFetch("/api/auth/password-reset/question", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: phone }) });
       const result = await response.json();
       if (!response.ok) { setMessage(result.error ?? "Could not reach the server."); setBusy(false); return; }
       setIdentifier(phone);
@@ -43,7 +44,7 @@ export default function ForgotPassword() {
   async function submitAnswer(form: FormData) {
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/auth/password-reset/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier, answer: form.get("answer") }) });
+      const response = await safeFetch("/api/auth/password-reset/answer", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier, answer: form.get("answer") }) });
       const result = await response.json();
       if (!response.ok) { setMessage(result.error ?? "Could not verify that answer."); setBusy(false); return; }
       router.push(`/reset-password?token=${result.data.token}`);

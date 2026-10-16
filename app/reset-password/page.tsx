@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { AuthShell, authPerks } from "@/components/store/auth-shell";
 import { PasswordField } from "@/components/store/auth-fields";
+import { safeFetch } from "@/lib/safe-fetch";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -14,7 +15,7 @@ function ResetPasswordForm() {
   async function submit(form: FormData) {
     setBusy(true); setMessage("");
     try {
-      const response = await fetch("/api/auth/password-reset/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, password: form.get("password") }) });
+      const response = await safeFetch("/api/auth/password-reset/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, password: form.get("password") }) });
       const result = await response.json();
       if (response.ok) { setDone(true); setTimeout(() => router.push("/login"), 1500); }
       else setMessage(result.error ?? "This reset link is invalid or expired.");
