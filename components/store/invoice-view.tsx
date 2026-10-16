@@ -27,6 +27,7 @@ export function InvoiceView({ orderId, backHref, isAdmin = false }: { orderId: s
     <article className="invoice-sheet">
       <header className="invoice-head">
         <div>
+          {i.seller.logoUrl && <img className="invoice-logo" src={i.seller.logoUrl} alt={i.seller.name} />}
           <h1>{i.title}</h1>
           <p className="invoice-sub">{i.detailed ? "Original for recipient" : "Customer invoice"}</p>
         </div>
@@ -45,6 +46,7 @@ export function InvoiceView({ orderId, backHref, isAdmin = false }: { orderId: s
           {i.seller.name !== i.seller.legalName && <p>Trading as {i.seller.name}</p>}
           {i.seller.address && <p className="pre">{i.seller.address}</p>}
           {i.seller.gstin && <p>GSTIN: <b>{i.seller.gstin}</b></p>}
+          {i.seller.pan && <p>PAN: {i.seller.pan}</p>}
           {i.seller.state && <p>State: {i.seller.state}</p>}
           {(i.seller.email || i.seller.phone) && <p>{[i.seller.email, i.seller.phone].filter(Boolean).join(" · ")}</p>}
         </div>
@@ -95,6 +97,7 @@ export function InvoiceView({ orderId, backHref, isAdmin = false }: { orderId: s
       <div className="invoice-foot">
         <p>{i.inclusive ? "All prices include GST." : "GST is included in the amounts shown."} Shipping is charged separately where applicable. This is a computer-generated invoice and does not need a signature.</p>
         <p>Goods once sold can be returned only as per our Returns &amp; Refunds Policy.</p>
+        {i.footerNote && <p className="pre">{i.footerNote}</p>}
       </div>
     </article>
   </section>;

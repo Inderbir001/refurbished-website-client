@@ -15,7 +15,7 @@ function useReset(anchor: React.RefObject<HTMLElement | null>, onReset: () => vo
   }); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-export function ImageField({ name, label, defaultValue = "", required = false, hint, alt = "" }: { name: string; label: string; defaultValue?: string; required?: boolean; hint?: string; alt?: string }) {
+export function ImageField({ name, label, defaultValue = "", required = false, hint, alt = "", onValue }: { name: string; label: string; defaultValue?: string; required?: boolean; hint?: string; alt?: string; onValue?: (url: string) => void }) {
   const [value, setValue] = useState(defaultValue);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +24,7 @@ export function ImageField({ name, label, defaultValue = "", required = false, h
   const proxy = useRef<HTMLInputElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   useReset(root, () => { setValue(defaultValue); setError(""); });
-  useEffect(() => { proxy.current?.setCustomValidity(required && !value ? "Please upload a photo." : ""); }, [required, value]);
+  useEffect(() => { proxy.current?.setCustomValidity(required && !value ? "Please upload a photo." : ""); onValue?.(value); }, [required, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function choose(file: File | undefined) {
     if (!file) return;

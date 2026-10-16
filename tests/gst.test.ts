@@ -38,3 +38,13 @@ describe("amount in words", () => {
     expect(rupeesInWords(0)).toBe("Rupees Zero Only");
   });
 });
+
+import { isValidPan } from "../lib/gst";
+describe("PAN", () => {
+  it("accepts the standard format only", () => {
+    expect(isValidPan("ABCDE1234F")).toBe(true);
+    expect(isValidPan("abcde1234f")).toBe(true);
+    expect(isValidPan("ABCD1234EF")).toBe(false);
+    expect(isValidPan("")).toBe(false);
+  });
+});

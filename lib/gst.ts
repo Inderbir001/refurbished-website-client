@@ -18,6 +18,8 @@ export function isValidGstin(input: string) {
   return CHARS[(36 - (sum % 36)) % 36] === gstin[14];
 }
 
+export const isValidPan = (value: string) => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(value.trim().toUpperCase());
+
 // Indian financial year runs April to March. April 2026 to March 2027 -> "2627".
 export function financialYear(date = new Date()) {
   const ist = new Date(date.getTime() + 5.5 * 3_600_000);

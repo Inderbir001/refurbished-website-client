@@ -329,3 +329,39 @@
 .imgf-add:disabled { opacity: .6; cursor: wait; }
 .imgf-paste { display: flex; gap: 8px; }
 .imgf-paste .secondary-button { padding: 9px 16px; }
+
+/* ---------- Admin → Invoices ---------- */
+.invs { display: grid; gap: 16px; max-width: 860px; }
+.invs-check { padding: 16px 20px; border-radius: 16px; border: 1.5px solid #f0c9bd; background: #fff8f5; }
+.invs-check.ready { border-color: #b7dfc7; background: #f1faf5; }
+.invs-check h3 { margin: 0 0 8px; font-size: 15px; }
+.invs-check ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: 13px; color: var(--muted); }
+.invs-check li.ok { color: #0f5d3a; font-weight: 600; }
+.invs-check p { margin: 10px 0 0; font-size: 13px; }
+.invs-form { display: grid; gap: 16px; }
+.invs-card { display: grid; gap: 14px; padding: 22px 24px; background: #fff; border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow-sm); }
+.invs-card h2 { margin: 0; font: 700 17px 'DM Sans', sans-serif; }
+.invs-card h2 small { margin-left: 8px; color: var(--muted); font-weight: 500; font-size: 12px; }
+.invs-two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.invs-field { display: grid; gap: 7px; font-size: 13px; font-weight: 600; color: #31413c; align-content: start; }
+.invs-field input, .invs-field textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; font: 500 14px 'DM Sans', sans-serif; color: var(--ink); resize: vertical; }
+.invs-field input:focus, .invs-field textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(251, 107, 72, .16); }
+.invs-field input[aria-invalid="true"] { border-color: #d0583d; }
+.invs-field small { color: var(--muted); font-weight: 400; font-size: 12px; line-height: 1.45; }
+.invs-field small.bad { color: #b3351b; font-weight: 600; } .invs-field small.good { color: #0f7a4d; font-weight: 600; }
+.invs-next { font: 700 18px 'DM Mono', monospace; padding: 9px 0; }
+.invs-note { margin: 0; color: var(--muted); font-size: 13px; }
+.invs-check-row { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.invs-check-row input { accent-color: var(--orange); width: 16px; height: 16px; }
+.invs-sheet { padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px; background: #fcfcfa; font-size: 12px; line-height: 1.5; }
+.invs-sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 2px solid var(--ink); }
+.invs-sheet-head img { max-height: 40px; max-width: 160px; object-fit: contain; }
+.invs-sheet-head div { display: grid; text-align: right; }
+.invs-sheet small { display: block; color: var(--muted); font-size: 10px; letter-spacing: .06em; }
+.invs-sheet-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding-top: 12px; }
+.invs-sheet-body > div { display: grid; gap: 2px; }
+.invs-sheet-foot { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); white-space: pre-line; }
+.invs-msg.ok { margin: 0; padding: 10px 14px; border-radius: 12px; background: #eef8f1; color: #0f5d3a; font-weight: 600; font-size: 13px; }
+.invs-save .primary-button { min-width: 220px; }
+@media (max-width: 640px) { .invs-two, .invs-sheet-body { grid-template-columns: 1fr; } }
+.invs-sheet-body span { white-space: pre-line; }

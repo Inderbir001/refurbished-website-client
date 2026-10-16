@@ -3,10 +3,9 @@ import { brand } from "../brand";
 import { db } from "../db";
 import { AppError } from "../http";
 import { financialYear, hsnFor, invoiceNumber, rupeesInWords } from "../gst";
-import { getBusinessDetails } from "../site-content";
+import { getBusinessDetails, getInvoiceSettings } from "../site-content";
 
 const PAID: PaymentStatus[] = [PaymentStatus.SUCCESS, PaymentStatus.PARTIALLY_REFUNDED, PaymentStatus.REFUNDED];
-const INVOICE_PREFIX = "MM";
 
 // Gives a paid order its invoice number, once. Numbers run 1, 2, 3... per financial year with no gaps or repeats:
 // the order row is locked while the counter moves, so two requests for the same order cannot both take a number.
@@ -21,7 +20,7 @@ export async function ensureInvoiceNumber(orderId: string) {
     const issuedAt = new Date();
     const fy = financialYear(issuedAt);
     const counter = await tx.invoiceCounter.upsert({ where: { id: fy }, update: { lastNumber: { increment: 1 } }, create: { id: fy, lastNumber: 1 } });
-    const number = invoiceNumber(INVOICE_PREFIX, fy, counter.lastNumber);
+    const number = invoiceNumber((await getInvoiceSettings()).prefix, fy, counter.lastNumber);
     await tx.order.update({ where: { id: orderId }, data: { invoiceNumber: number, invoiceIssuedAt: issuedAt } });
     return number;
   });
@@ -34,7 +33,8 @@ export type InvoiceLine = { description: string; sku: string; hsn: string; quant
 export type InvoiceData = {
   number: string; issuedAt: string; title: "TAX INVOICE" | "INVOICE"; detailed: boolean;
   orderNumber: string; orderDate: string; paymentRef: string | null; gateway: string | null;
-  seller: { name: string; legalName: string; address: string; gstin: string; email: string; phone: string; state: string };
+  seller: { name: string; legalName: string; address: string; gstin: string; pan: string; email: string; phone: string; state: string; logoUrl: string };
+  footerNote: string;
   buyer: { name: string; businessName: string; gstin: string; phone: string; address: string[]; state: string };
   placeOfSupply: string; supply: "INTRA" | "INTER"; inclusive: boolean;
   lines: InvoiceLine[]; subtotal: number; discount: number; shipping: number; roundOff: number; total: number;
@@ -48,7 +48,7 @@ export async function buildInvoice(orderId: string): Promise<InvoiceData> {
   const order = await db.order.findUnique({ where: { id: orderId }, include: { items: { include: { product: { select: { category: { select: { slug: true } } } } } }, payments: { orderBy: { createdAt: "desc" } }, user: { select: { name: true } } } });
   if (!order) throw new AppError(404, "Order not found.");
   if (!number || !order.invoiceIssuedAt) throw new AppError(409, "An invoice is available once the payment is confirmed.");
-  const [store, business] = await Promise.all([db.store.findFirst({ include: { settings: true, taxRules: { where: { isActive: true }, orderBy: { createdAt: "asc" }, take: 1 } } }), getBusinessDetails()]);
+  const [store, business, invoiceSettings] = await Promise.all([db.store.findFirst({ include: { settings: true, taxRules: { where: { isActive: true }, orderBy: { createdAt: "asc" }, take: 1 } } }), getBusinessDetails(), getInvoiceSettings()]);
   const shipTo = order.shippingAddress as Address;
   const billTo = (order.billingAddress as Address | null) ?? shipTo;
   const intra = order.igstAmount === 0 && order.cgstAmount + order.sgstAmount > 0;
@@ -73,9 +73,10 @@ export async function buildInvoice(orderId: string): Promise<InvoiceData> {
   const detailed = Boolean(order.buyerGstin);
   const gateway = order.payments.find((payment) => payment.status === PaymentStatus.SUCCESS || payment.status === PaymentStatus.REFUNDED || payment.status === PaymentStatus.PARTIALLY_REFUNDED);
   return {
-    number, issuedAt: order.invoiceIssuedAt.toISOString(), title: detailed ? "TAX INVOICE" : "INVOICE", detailed,
+    number, issuedAt: order.invoiceIssuedAt.toISOString(), title: detailed && settings?.gstin ? "TAX INVOICE" : "INVOICE", detailed,
     orderNumber: order.orderNumber, orderDate: order.createdAt.toISOString(), paymentRef: gateway?.gatewayTransactionId ?? null, gateway: gateway?.gateway ?? null,
-    seller: { name: store?.name ?? brand.name, legalName: business.legalName || store?.name || brand.name, address: business.address, gstin: settings?.gstin ?? "", email: settings?.supportEmail ?? "", phone: settings?.supportPhone ?? "", state: store?.taxRules[0]?.homeState ?? "" },
+    seller: { name: store?.name ?? brand.name, legalName: business.legalName || store?.name || brand.name, address: business.address, gstin: settings?.gstin ?? "", pan: invoiceSettings.pan, email: settings?.supportEmail ?? "", phone: settings?.supportPhone ?? "", state: store?.taxRules[0]?.homeState ?? "", logoUrl: invoiceSettings.showLogo ? settings?.logoUrl ?? "" : "" },
+    footerNote: invoiceSettings.footerNote,
     buyer: { name: billTo.name ?? order.user?.name ?? "", businessName: order.buyerBusinessName ?? "", gstin: order.buyerGstin ?? "", phone: billTo.phone ?? "", address: addressLines(billTo), state: billTo.state ?? "" },
     placeOfSupply: shipTo.state ?? "", supply: intra ? "INTRA" : "INTER", inclusive,
     lines, subtotal: order.subtotal, discount: order.discount, shipping: order.shippingAmount, roundOff, total: order.total,

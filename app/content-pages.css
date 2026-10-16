@@ -281,3 +281,5 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
   .invoice-sheet { border: 0; box-shadow: none; border-radius: 0; padding: 0; }
   .invoice-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+.invoice-logo { display: block; max-height: 52px; max-width: 200px; object-fit: contain; margin-bottom: 10px; }
+.invoice-foot .pre { white-space: pre-line; }
