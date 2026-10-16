@@ -170,9 +170,9 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
           <div className="co-rows">
             <p><span>Subtotal</span><b>{inr(totals!.subtotal)}</b></p>
             {totals!.discount > 0 && <p className="save"><span>Discount{totals!.couponCode ? ` (${totals!.couponCode})` : ""}</span><b>−{inr(totals!.discount)}</b></p>}
-            <p><span>GST</span><b>{inr(totals!.tax)}</b></p>
             <p><span>Delivery</span><b>{delivery ? inr(delivery) : "Free"}</b></p>
             <p className="total"><span>Total</span><b>{inr(payable)}</b></p>
+            <p className="gst-note">Inclusive of GST ₹{(totals!.tax / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</p>
           </div>
           <p className="co-secure">🔒 Payments are processed by Razorpay. No card number or CVV touches {brand.name}, and orders are confirmed only after the payment is verified. <Link href="/cart">Edit cart</Link></p>
         </>}

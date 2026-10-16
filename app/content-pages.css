@@ -239,3 +239,4 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
 .co-coupon-on { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 11px 14px; border: 1.5px dashed #0f7a4d; border-radius: 12px; background: #f1faf5; font-size: 13px; color: #0f5d3a; }
 .co-coupon .link-button { border: 0; background: none; padding: 0; color: var(--orange); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: underline; }
 .co-coupon-error { margin: 8px 2px 0; font-size: 12px; color: #b3351b; line-height: 1.4; }
+.gst-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); text-align: right; }

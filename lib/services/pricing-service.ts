@@ -7,9 +7,11 @@ export function calculateCheckoutTotals(lines: PricedLine[], options: { taxRate?
   const discountRatio = subtotal ? discount / subtotal : 0;
   const tax = lines.reduce((sum, line) => {
     const discountedLine = line.unitPrice * line.quantity * (1 - discountRatio);
-    return sum + Math.round(discountedLine * (line.taxRate ?? options.taxRate ?? 18) / 100);
+    const rate = line.taxRate ?? options.taxRate ?? 18;
+    return sum + Math.round(discountedLine * rate / (100 + rate)); // GST contained in the (discounted) price
   }, 0);
   const freeShippingThreshold = options.freeShippingThreshold ?? 49_900;
   const shipping = options.shippingAmount ?? (taxableAmount === 0 || taxableAmount >= freeShippingThreshold ? 0 : options.standardShipping ?? 9_900);
-  return { subtotal, discount, tax, shipping, total: taxableAmount + tax + shipping };
+  // Prices are GST-inclusive: `tax` is the part of the price that is GST, so it is NOT added to the total again.
+  return { subtotal, discount, tax, shipping, total: taxableAmount + shipping };
 }

@@ -88,7 +88,7 @@ export default async function OrderSuccess({ params }: { params: Promise<{ token
           <p><span>Subtotal</span><b>{inr(order.subtotal)}</b></p>
           {order.discount > 0 && <p className="save"><span>Discount{order.couponCode ? ` (${order.couponCode})` : ""}</span><b>−{inr(order.discount)}</b></p>}
           <p><span>Delivery</span><b>{order.shippingAmount ? inr(order.shippingAmount) : "Free"}</b></p>
-          {order.igstAmount > 0 ? <p><span>IGST</span><b>{inr(order.igstAmount)}</b></p> : order.cgstAmount + order.sgstAmount > 0 ? <><p><span>CGST</span><b>{inr(order.cgstAmount)}</b></p><p><span>SGST</span><b>{inr(order.sgstAmount)}</b></p></> : <p><span>GST</span><b>{inr(order.taxAmount)}</b></p>}
+          {order.igstAmount > 0 ? <p><span>IGST (included)</span><b>{inr(order.igstAmount)}</b></p> : order.cgstAmount + order.sgstAmount > 0 ? <><p><span>CGST (included)</span><b>{inr(order.cgstAmount)}</b></p><p><span>SGST (included)</span><b>{inr(order.sgstAmount)}</b></p></> : <p><span>GST (included)</span><b>{inr(order.taxAmount)}</b></p>}
           <p className="grand"><span>{paid ? "Total paid" : "Total"}</span><b>{inr(order.total)}</b></p>
           {payment && <div className="receipt-pay"><span className={`pay-pill ${paid ? "ok" : "wait"}`}>{paid ? "Paid" : order.paymentStatus.toLowerCase()}</span><small>{gatewayLabel[payment.gateway] ?? payment.gateway}{payment.gatewayTransactionId ? ` · ${payment.gatewayTransactionId}` : ""}</small></div>}
         </div>

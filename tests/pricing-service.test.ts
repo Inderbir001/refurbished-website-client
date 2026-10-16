@@ -3,7 +3,7 @@ import { calculateCheckoutTotals } from "../lib/services/pricing-service";
 
 describe("calculateCheckoutTotals", () => {
   it("calculates subtotal, GST and delivery entirely from trusted line prices", () => {
-    expect(calculateCheckoutTotals([{ unitPrice: 10_000, quantity: 2 }])).toEqual({ subtotal: 20_000, discount: 0, tax: 3_600, shipping: 9_900, total: 33_500 });
+    expect(calculateCheckoutTotals([{ unitPrice: 10_000, quantity: 2 }])).toEqual({ subtotal: 20_000, discount: 0, tax: 3_051, shipping: 9_900, total: 29_900 });
   });
 
   it("applies free delivery at the threshold", () => {
