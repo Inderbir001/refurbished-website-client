@@ -9,8 +9,10 @@ type Address = { id: string; name: string; phone: string; line1: string; line2: 
 type Gateway = { id: string; label: string; available: boolean; reason: string };
 type ShippingOption = { ruleId?: string; name: string; charge: number; estimatedDaysMin: number; estimatedDaysMax: number };
 type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
-type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; prefill: { name: string; contact: string }; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void } };
+type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; prefill: { name: string; contact: string }; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void }; method?: Record<string, boolean>; theme?: { color: string } };
 declare global { interface Window { Razorpay: new (options: RazorpayOptions) => { open(): void } } }
+type PayMethod = "upi" | "card" | "netbanking" | "wallet";
+type CartView = { items: { id: string; quantity: number; product: { name: string; images: { url: string }[] }; variant: { title: string } | null }[]; totals: { subtotal: number; discount: number; tax: number; shipping: number; total: number; couponCode?: string | null } };
 const fields = ["name", "phone", "line1", "line2", "city", "state", "pincode"] as const;
 const AUTO = "__auto__";
 async function loadRazorpay() { if (window.Razorpay) return; await new Promise<void>((resolve, reject) => { const existing = document.querySelector<HTMLScriptElement>('script[src="https://checkout.razorpay.com/v1/checkout.js"]'); if (existing) { existing.addEventListener("load", () => resolve(), { once: true }); return; } const script = document.createElement("script"); script.src = "https://checkout.razorpay.com/v1/checkout.js"; script.onload = () => resolve(); script.onerror = () => reject(new Error("Razorpay Checkout could not be loaded.")); document.head.appendChild(script); }); }
@@ -21,6 +23,10 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const formRef = useRef<HTMLFormElement>(null);
   const availableGateways = gateways.filter((item) => item.available);
   const firstGateway = availableGateways[0]?.id ?? "";
+  const [gateway, setGateway] = useState(firstGateway);
+  const [method, setMethod] = useState<PayMethod>("upi");
+  const [cart, setCart] = useState<CartView | null>(null);
+  useEffect(() => { fetch("/api/cart").then((response) => response.json()).then((result) => setCart(result.data)).catch(() => setCart(null)); }, []);
   const [selectedAddress, setSelectedAddress] = useState(addresses[0]?.id ?? "new");
   const [differentBilling, setDifferentBilling] = useState(false);
   const [error, setError] = useState("");
@@ -69,30 +75,84 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
       if (gateway !== "RAZORPAY") throw new Error("This payment method is awaiting merchant activation.");
       await loadRazorpay();
       const checkoutData = intent.data.checkoutData as { key: string; razorpayOrderId: string };
-      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, handler: async (gatewayResult) => { const verification = await fetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
+      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, theme: { color: "#fb6b48" }, method: { upi: method === "upi", card: method === "card", netbanking: method === "netbanking", wallet: method === "wallet", emi: false, paylater: false }, handler: async (gatewayResult) => { const verification = await fetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
     } catch (caught) { setLoading(false); setError(caught instanceof Error ? caught.message : "Payment could not be started."); }
   }
 
-  return <section className="checkout page-shell"><div><p className="eyebrow">CHECKOUT</p><h1>Delivery & payment</h1><p>Prices, stock, coupon, delivery, GST and payment state are rechecked on the server.</p>
-    <form ref={formRef} onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)); }} className="checkout-form">
-      {addresses.length > 0 && <label className="wide-field">Saved address<select value={selectedAddress} onChange={(event) => setSelectedAddress(event.target.value)}><option value="new">Use a new address</option>{addresses.map((address) => <option key={address.id} value={address.id}>{address.name} — {address.line1}, {address.city}</option>)}</select></label>}
-      {selectedAddress === "new" && <AddressSearch onPick={(picked) => { fillAddress(formRef.current, picked); setManualState(picked.state); setManualPincode(picked.pincode); }} />}
-      {selectedAddress === "new" && fields.map((field) => <label key={field}>{field === "line1" ? "Address" : field === "line2" ? "Address line 2" : field[0].toUpperCase() + field.slice(1)}<input required={field !== "line2"} name={field} placeholder={field === "pincode" ? "560001" : ""} onChange={field === "state" ? (event) => setManualState(event.target.value) : field === "pincode" ? (event) => setManualPincode(event.target.value) : undefined} /></label>)}
-      <label className="wide-field checkbox-label"><input type="checkbox" checked={differentBilling} onChange={(event) => setDifferentBilling(event.target.checked)} /> Use a different billing address</label>
-      {differentBilling && fields.map((field) => <label key={`billing_${field}`}>Billing {field.replace("line1", "address").replace("line2", "address line 2")}<input required={field !== "line2"} name={`billing_${field}`} /></label>)}
-      <label className="wide-field">Delivery{shippingOptions.length > 1
-        ? <select value={shippingRuleId} onChange={(event) => setShippingRuleId(event.target.value)}>{shippingOptions.map((option) => <option key={option.ruleId ?? AUTO} value={option.ruleId ?? AUTO}>{option.name} — {option.charge === 0 ? "Free" : inr(option.charge)} · {option.estimatedDaysMin}-{option.estimatedDaysMax} days</option>)}</select>
-        : <select disabled><option>{shippingLoading ? "Checking delivery options…" : shippingOptions[0] ? `${shippingOptions[0].name} — ${shippingOptions[0].charge === 0 ? "Free" : inr(shippingOptions[0].charge)} · ${shippingOptions[0].estimatedDaysMin}-${shippingOptions[0].estimatedDaysMax} days` : "Enter your address to see delivery options"}</option></select>}
-      </label>
-      {/* Only gateways the merchant has actually activated are offered; the others stay in the code and show up automatically once their credentials are added. */}
-      {availableGateways.length === 1
-        ? <div className="wide-field payment-fixed"><input type="hidden" name="gateway" value={availableGateways[0].id} /><span>Payment method</span><div><b>{availableGateways[0].label}</b><small>UPI, cards &amp; net banking</small></div></div>
-        : availableGateways.length > 1
-          ? <label className="wide-field">Payment method<select name="gateway" defaultValue={firstGateway}>{availableGateways.map((gateway) => <option key={gateway.id} value={gateway.id}>{gateway.label}</option>)}</select></label>
-          : <p className="form-error wide-field" role="alert">Online payment is not available right now. Please try again later.</p>}
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="primary-button" disabled={loading || !firstGateway}>{loading ? "Securing order…" : firstGateway ? "Continue to secure payment" : "Payment unavailable"}</button>
-      <p className="consent-note wide-field">By placing your order you agree to our <Link href="/policies/terms-and-conditions" target="_blank">Terms &amp; Conditions</Link>, <Link href="/policies/privacy-policy" target="_blank">Privacy Policy</Link> and <Link href="/policies/refund-policy" target="_blank">Returns &amp; Refunds Policy</Link>.</p>
-    </form>
-  </div><aside className="checkout-note"><b>Safe by design</b><p>No card number or CVV touches {brand.name}. Orders are paid only after server-side gateway verification or an authenticated webhook.</p><small>Unpaid stock reservations expire and are released automatically.</small></aside></section>;
+  const labels: Record<(typeof fields)[number], string> = { name: "Full name", phone: "Phone number", line1: "Address", line2: "Address line 2 (optional)", city: "City", state: "State", pincode: "Pincode" };
+  const holders: Partial<Record<(typeof fields)[number], string>> = { line1: "Flat / house no., building, street", line2: "Landmark, area", phone: "10-digit mobile number", pincode: "6 digits" };
+  const autos: Record<(typeof fields)[number], string> = { name: "name", phone: "tel", line1: "address-line1", line2: "address-line2", city: "address-level2", state: "address-level1", pincode: "postal-code" };
+  const spans: Record<(typeof fields)[number], string> = { name: "s3", phone: "s3", line1: "s6", line2: "s6", city: "s2", state: "s2", pincode: "s2" };
+  const methods: { id: PayMethod; title: string; note: string; icon: string }[] = [
+    { id: "upi", title: "UPI", note: "GPay, PhonePe, Paytm, BHIM", icon: "₹" },
+    { id: "card", title: "Cards", note: "Credit & debit cards", icon: "▭" },
+    { id: "netbanking", title: "Net banking", note: "All major banks", icon: "⌂" },
+    { id: "wallet", title: "Wallets", note: "Paytm, Mobikwik & more", icon: "◧" },
+  ];
+  const items = cart?.items ?? [];
+  const totals = cart?.totals;
+  const delivery = chosenShipping ? chosenShipping.charge : totals?.shipping ?? 0;
+  const payable = totals ? totals.total - totals.shipping + delivery : 0;
+  const razorpaySelected = (availableGateways.length === 1 ? availableGateways[0]?.id : gateway) === "RAZORPAY";
+  const payLabel = loading ? "Securing order…" : firstGateway ? (payable ? `Pay ${inr(payable)} securely` : "Pay securely") : "Payment unavailable";
+  const placeButton = (key: string) => <button key={key} form="co-form" className="primary-button co-pay" disabled={loading || !firstGateway}>{payLabel}</button>;
+
+  return <section className="co-page page-shell">
+    <header className="co-head"><p className="eyebrow">SECURE CHECKOUT</p><h1>Checkout</h1></header>
+    <div className="co-layout">
+      <form id="co-form" ref={formRef} onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)); }} className="co-form">
+        <section className="co-card">
+          <h2><span>1</span>Delivery address</h2>
+          {addresses.length > 0 && <div className="co-addresses" role="radiogroup" aria-label="Saved addresses">
+            {addresses.map((address) => <label key={address.id} className={selectedAddress === address.id ? "co-address on" : "co-address"}><input type="radio" name="saved-address" checked={selectedAddress === address.id} onChange={() => setSelectedAddress(address.id)} /><b>{address.name} <small>{address.phone}</small></b><span>{address.line1}{address.line2 ? `, ${address.line2}` : ""}, {address.city}, {address.state} - {address.pincode}</span></label>)}
+            <label className={selectedAddress === "new" ? "co-address on" : "co-address"}><input type="radio" name="saved-address" checked={selectedAddress === "new"} onChange={() => setSelectedAddress("new")} /><b>+ Add a new address</b></label>
+          </div>}
+          {selectedAddress === "new" && <>
+            <AddressSearch onPick={(picked) => { fillAddress(formRef.current, picked); setManualState(picked.state); setManualPincode(picked.pincode); }} />
+            <div className="co-fields">{fields.map((field) => <label key={field} className={`co-field ${spans[field]}`}>{labels[field]}<input required={field !== "line2"} name={field} placeholder={holders[field] ?? ""} autoComplete={autos[field]} inputMode={field === "phone" || field === "pincode" ? "numeric" : undefined} maxLength={field === "pincode" ? 6 : undefined} onChange={field === "state" ? (event) => setManualState(event.target.value) : field === "pincode" ? (event) => setManualPincode(event.target.value) : undefined} /></label>)}</div>
+          </>}
+          <label className="co-check"><input type="checkbox" checked={differentBilling} onChange={(event) => setDifferentBilling(event.target.checked)} /> Billing address is different</label>
+          {differentBilling && <div className="co-fields">{fields.map((field) => <label key={`billing_${field}`} className={`co-field ${spans[field]}`}>Billing {labels[field].toLowerCase()}<input required={field !== "line2"} name={`billing_${field}`} autoComplete={`billing ${autos[field]}`} /></label>)}</div>}
+        </section>
+
+        <section className="co-card">
+          <h2><span>2</span>Delivery</h2>
+          {shippingOptions.length > 1
+            ? <div className="co-options" role="radiogroup" aria-label="Delivery options">{shippingOptions.map((option) => { const id = option.ruleId ?? AUTO; return <label key={id} className={shippingRuleId === id ? "co-option on" : "co-option"}><input type="radio" name="delivery-option" checked={shippingRuleId === id} onChange={() => setShippingRuleId(id)} /><b>{option.name}</b><span>{option.estimatedDaysMin}-{option.estimatedDaysMax} days</span><strong>{option.charge === 0 ? "Free" : inr(option.charge)}</strong></label>; })}</div>
+            : shippingOptions[0]
+              ? <div className="co-option on single"><b>{shippingOptions[0].name}</b><span>{shippingOptions[0].estimatedDaysMin}-{shippingOptions[0].estimatedDaysMax} days</span><strong>{shippingOptions[0].charge === 0 ? "Free" : inr(shippingOptions[0].charge)}</strong></div>
+              : <p className="co-hint">{shippingLoading ? "Checking delivery options…" : "Choose your address above to see delivery options and charges."}</p>}
+        </section>
+
+        <section className="co-card">
+          <h2><span>3</span>Payment</h2>
+          {/* Only gateways the merchant has actually activated are offered; the others stay in the code and show up automatically once their credentials are added. */}
+          {availableGateways.length > 1 && <label className="co-field s6">Pay with<select value={gateway} onChange={(event) => setGateway(event.target.value)}>{availableGateways.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
+          <input type="hidden" name="gateway" value={availableGateways.length === 1 ? availableGateways[0].id : gateway} />
+          {razorpaySelected && <div className="co-methods" role="radiogroup" aria-label="Payment method">{methods.map((item) => <label key={item.id} className={method === item.id ? "co-method on" : "co-method"}><input type="radio" name="pay-method" checked={method === item.id} onChange={() => setMethod(item.id)} /><i aria-hidden>{item.icon}</i><b>{item.title}</b><span>{item.note}</span></label>)}</div>}
+          {availableGateways.length === 0 && <p className="form-error" role="alert">Online payment is not available right now. Please try again later.</p>}
+          {razorpaySelected && <p className="co-hint">You&apos;ll enter your {method === "upi" ? "UPI ID or approve in your UPI app" : method === "card" ? "card details" : method === "netbanking" ? "bank login" : "wallet login"} in Razorpay&apos;s secure window. We never see or store it.</p>}
+          {error && <p className="form-error" role="alert">{error}</p>}
+          <div className="co-pay-row">{placeButton("pay-main")}</div>
+          <p className="consent-note">By placing your order you agree to our <Link href="/policies/terms-and-conditions" target="_blank">Terms &amp; Conditions</Link>, <Link href="/policies/privacy-policy" target="_blank">Privacy Policy</Link> and <Link href="/policies/refund-policy" target="_blank">Returns &amp; Refunds Policy</Link>.</p>
+        </section>
+      </form>
+
+      <aside className="co-summary">
+        <h2>Order summary</h2>
+        {!cart ? <p className="co-hint">Loading your order…</p> : <>
+          <ul className="co-items">{items.map((item) => <li key={item.id}><div className="co-thumb">{item.product.images[0] ? <img src={item.product.images[0].url} alt="" /> : null}<em>{item.quantity}</em></div><div><b>{item.product.name}</b>{item.variant?.title && item.variant.title !== "Standard" && <small>{item.variant.title}</small>}</div></li>)}</ul>
+          <div className="co-rows">
+            <p><span>Subtotal</span><b>{inr(totals!.subtotal)}</b></p>
+            {totals!.discount > 0 && <p className="save"><span>Discount{totals!.couponCode ? ` (${totals!.couponCode})` : ""}</span><b>−{inr(totals!.discount)}</b></p>}
+            <p><span>GST</span><b>{inr(totals!.tax)}</b></p>
+            <p><span>Delivery</span><b>{delivery ? inr(delivery) : "Free"}</b></p>
+            <p className="total"><span>Total</span><b>{inr(payable)}</b></p>
+          </div>
+          <div className="co-summary-pay">{placeButton("pay-side")}</div>
+          <p className="co-secure">🔒 Payments are processed by Razorpay. No card number or CVV touches {brand.name}, and orders are confirmed only after the payment is verified. <Link href="/cart">Edit cart</Link></p>
+        </>}
+      </aside>
+    </div>
+  </section>;
 }
