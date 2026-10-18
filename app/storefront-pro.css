@@ -18,3 +18,9 @@ h1, h2, h3 { font-family: var(--font-head), sans-serif; }
 .product-card .price-row del { font-size: 13px; }
 .card-specs span { font-weight: 600; }
 @media (max-width: 600px) { .product-card .product-image { height: 170px; padding: 12px; } .product-card .product-copy { padding: 12px 12px 14px; } .product-card .product-name { font-size: 13.5px; } .product-card .price-row strong { font-size: 17px; } }
+
+/* buying cues on cards: real savings and real low stock */
+.product-card .save-line { margin-top: 4px; color: #0f7a4d; font-size: 13px; font-weight: 700; }
+.product-card .low-badge { position: absolute; left: 12px; bottom: 12px; padding: 4px 10px; border-radius: 999px; background: #fff2d9; color: #8a5a00; font: 700 11.5px var(--font-body), sans-serif; box-shadow: 0 4px 10px rgba(0, 0, 0, .08); }
+.product-card .product-image { position: relative; }
+.product-card .discount-badge { top: 12px; left: 12px; }

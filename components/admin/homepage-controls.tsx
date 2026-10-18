@@ -2,14 +2,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { safeFetch } from "@/lib/safe-fetch";
-import { ImageField, ImageListField } from "@/components/admin/image-field";
+import { ImageField } from "@/components/admin/image-field";
+import { BannerStudio, type NewSlide, type StudioCategory, type StudioProduct } from "@/components/admin/banner-studio";
 
 type Section = { id: string; type: string; title: string; subtitle: string; position: number; isVisible: boolean };
-type Banner = { id: string; title: string; subtitle: string; imageUrl: string; linkUrl: string; position: number; isVisible: boolean };
+type Banner = { id: string; title: string; subtitle: string; imageUrl: string; mobileImageUrl: string; linkUrl: string; position: number; isVisible: boolean };
 type Note = { ok: boolean; text: string } | null;
 
 const labels: Record<string, { name: string; hint: string }> = {
-  HERO: { name: "Top banner", hint: "The big panel at the top of the homepage." },
+  HERO: { name: "Welcome section", hint: "The headline, buttons and top deals under the slideshow." },
   FEATURED_PRODUCTS: { name: "Top deals", hint: "Your biggest discounts, picked automatically." },
   CATEGORIES: { name: "Offers by category", hint: "One tile per category showing its best discount." },
   COLLECTION: { name: "Collections", hint: "Rows for the collections you created." },
@@ -18,13 +19,13 @@ const labels: Record<string, { name: string; hint: string }> = {
   TRUST: { name: "Why buy from us", hint: "Warranty, returns and secure payment reassurance." },
 };
 
-export function HomepageControls({ sections: initialSections, banners: initialBanners }: { sections: Section[]; banners: Banner[] }) {
+export function HomepageControls({ sections: initialSections, banners, products, categories }: { sections: Section[]; banners: Banner[]; products: StudioProduct[]; categories: StudioCategory[] }) {
   const router = useRouter();
   const [note, setNote] = useState<Note>(null);
   const [busy, setBusy] = useState(false);
   const [sections, setSections] = useState(initialSections);
-  const [banners, setBanners] = useState(initialBanners);
-  const ordered = [...sections].sort((a, b) => a.position - b.position);
+  const [mode, setMode] = useState<"none" | "make" | "upload">("none");
+  const ordered = [...sections].filter((section) => section.type !== "PROMO_BANNER").sort((a, b) => a.position - b.position);
   const hero = ordered.find((section) => section.type === "HERO");
   const [drafts, setDrafts] = useState<Record<string, { title: string; subtitle: string }>>(() => Object.fromEntries(sections.map((section) => [section.id, { title: section.title, subtitle: section.subtitle }])));
   const changed = (section: Section) => drafts[section.id]?.title !== section.title || drafts[section.id]?.subtitle !== section.subtitle;
@@ -45,6 +46,12 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
     return ok;
   }
   const saveText = (section: Section) => update(section, { title: drafts[section.id].title, subtitle: drafts[section.id].subtitle }, `${labels[section.type]?.name ?? "Section"} saved.`);
+  async function reorder(index: number, direction: -1 | 1) {
+    const a = banners[index]; const b = banners[index + direction];
+    if (!b) return;
+    await call("/api/admin/homepage/banners", "PATCH", { id: a.id, position: b.position === a.position ? b.position + direction : b.position }, "Order updated.");
+    await call("/api/admin/homepage/banners", "PATCH", { id: b.id, position: a.position }, "Order updated.");
+  }
   async function move(index: number, direction: -1 | 1) {
     const a = ordered[index]; const b = ordered[index + direction];
     if (!b) return;
@@ -56,10 +63,10 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
     {note && <p className={note.ok ? "studio-note ok" : "studio-note bad"} role="status">{note.text}</p>}
 
     {hero && <section className="hp-card">
-      <h2>Top banner</h2>
-      <label>Headline<input value={drafts[hero.id]?.title ?? ""} placeholder="Leave empty to show “Up to 71% off” automatically" onChange={(event) => setDraft(hero.id, { title: event.target.value })} /></label>
+      <h2>Welcome section</h2>
+      <label>Headline<input value={drafts[hero.id]?.title ?? ""} placeholder="Leave empty to use “Quality electronics at honest prices.”" onChange={(event) => setDraft(hero.id, { title: event.target.value })} /></label>
       <label>Small text under it<input value={drafts[hero.id]?.subtitle ?? ""} onChange={(event) => setDraft(hero.id, { subtitle: event.target.value })} /></label>
-      <button type="button" className="primary-button" disabled={busy || !changed(hero)} onClick={() => saveText(hero)}>{changed(hero) ? "Save banner text" : "Saved"}</button>
+      <button type="button" className="primary-button" disabled={busy || !changed(hero)} onClick={() => saveText(hero)}>{changed(hero) ? "Save text" : "Saved"}</button>
     </section>}
 
     <section className="hp-card">
@@ -76,22 +83,30 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
     </section>
 
     <section className="hp-card">
-      <h2>Banner pictures</h2>
-      <p className="step-hint">The first showing banner is the background of the top banner; the second is the promo banner. Paste a picture link (starts with https).</p>
+      <h2>Offers slideshow</h2>
+      <p className="step-hint">These pictures slide across the top of your homepage and open the page you choose. Make one in a minute, or upload a poster you designed (best size 1600 × 640).</p>
       {banners.length ? <ul className="hp-banners">{banners.map((banner, index) => <li key={banner.id} className={banner.isVisible ? "" : "off"}>
         <img src={banner.imageUrl} alt="" />
-        <div><b>{banner.title}</b><small>{index === 0 ? "Spare banner (not shown on the homepage)" : index === 1 ? "Promo banner" : `Extra banner ${index + 1}`}{banner.linkUrl ? ` · opens ${banner.linkUrl}` : ""}</small></div>
-        <div className="hp-actions"><button type="button" disabled={busy} onClick={async () => { if (await call("/api/admin/homepage/banners", "PATCH", { id: banner.id, isVisible: !banner.isVisible }, banner.isVisible ? "Banner hidden." : "Banner showing.")) setBanners((list) => list.map((item) => (item.id === banner.id ? { ...item, isVisible: !banner.isVisible } : item))); }}>{banner.isVisible ? "Hide" : "Show"}</button><button type="button" className="danger" disabled={busy} onClick={async () => { if (confirm(`Delete “${banner.title}”?`) && (await call("/api/admin/homepage/banners", "DELETE", { id: banner.id }, "Banner deleted."))) setBanners((list) => list.filter((item) => item.id !== banner.id)); }}>Delete</button></div>
-      </li>)}</ul> : <p className="step-hint">No banners yet.</p>}
-      <details className="hp-add"><summary>+ Add a banner</summary>
-        <form onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const added = await call("/api/admin/homepage", "POST", { title: data.get("title"), subtitle: data.get("subtitle") || undefined, imageUrl: data.get("imageUrl"), linkUrl: data.get("linkUrl") || undefined, position: banners.length, isVisible: true }, "Banner added."); if (added?.data) { const row = added.data as { id: string; title: string; subtitle?: string | null; imageUrl: string; linkUrl?: string | null; position: number; isVisible: boolean }; setBanners((list) => [...list, { id: row.id, title: row.title, subtitle: row.subtitle ?? "", imageUrl: row.imageUrl, linkUrl: row.linkUrl ?? "", position: row.position, isVisible: row.isVisible }]); form.reset(); } }}>
-          <label>Title<input name="title" required /></label>
-          <ImageField name="imageUrl" label="Banner picture" required hint="Wide pictures look best, about 1600 × 600." />
-          <label>Small text (optional)<input name="subtitle" /></label>
-          <label>Opens which page (optional)<input name="linkUrl" placeholder="/products" /></label>
-          <button className="primary-button" disabled={busy}>Add banner</button>
-        </form>
-      </details>
+        <div><b>{banner.title}</b><small>Slide {index + 1}{banner.mobileImageUrl ? " · has a phone version" : ""}{banner.linkUrl ? ` · opens ${banner.linkUrl}` : ""}{banner.isVisible ? "" : " · hidden"}</small></div>
+        <div className="hp-actions">
+          <button type="button" disabled={busy || index === 0} aria-label="Move earlier" onClick={() => reorder(index, -1)}>←</button>
+          <button type="button" disabled={busy || index === banners.length - 1} aria-label="Move later" onClick={() => reorder(index, 1)}>→</button>
+          <button type="button" disabled={busy} onClick={() => call("/api/admin/homepage/banners", "PATCH", { id: banner.id, isVisible: !banner.isVisible }, banner.isVisible ? "Slide hidden." : "Slide showing.")}>{banner.isVisible ? "Hide" : "Show"}</button>
+          <button type="button" className="danger" disabled={busy} onClick={() => { if (confirm(`Delete “${banner.title}”?`)) void call("/api/admin/homepage/banners", "DELETE", { id: banner.id }, "Slide deleted."); }}>Delete</button>
+        </div>
+      </li>)}</ul> : <p className="step-hint">No slides yet. Your homepage shows the welcome section until you add one.</p>}
+      <div className="hp-add-row">
+        <button type="button" className={mode === "make" ? "primary-button" : "secondary-button"} onClick={() => setMode(mode === "make" ? "none" : "make")}>✨ Create a banner</button>
+        <button type="button" className={mode === "upload" ? "primary-button" : "secondary-button"} onClick={() => setMode(mode === "upload" ? "none" : "upload")}>Upload my own picture</button>
+      </div>
+      {mode === "make" && <BannerStudio products={products} categories={categories} busy={busy} onCreate={async (slide: NewSlide) => { const added = await call("/api/admin/homepage", "POST", { title: slide.title, imageUrl: slide.imageUrl, mobileImageUrl: slide.mobileImageUrl, linkUrl: slide.linkUrl, position: banners.length, isVisible: true }, "Added to the slideshow."); if (added) setMode("none"); return Boolean(added); }} />}
+      {mode === "upload" && <form className="hp-upload" onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const added = await call("/api/admin/homepage", "POST", { title: data.get("title"), imageUrl: data.get("imageUrl"), mobileImageUrl: data.get("mobileImageUrl") || undefined, linkUrl: data.get("linkUrl") || undefined, position: banners.length, isVisible: true }, "Added to the slideshow."); if (added) { form.reset(); setMode("none"); } }}>
+        <label>Name (only you see this)<input name="title" required minLength={2} placeholder="Diwali sale" /></label>
+        <ImageField name="imageUrl" label="Picture for computers" required hint="Wide poster, best at 1600 × 640 pixels. Put your text inside the picture." />
+        <ImageField name="mobileImageUrl" label="Picture for phones (optional)" hint="Best at 900 × 750 pixels. If you skip it, the computer picture is used." />
+        <label>Opens which page (optional)<input name="linkUrl" placeholder="/products" /></label>
+        <button className="primary-button" disabled={busy}>Add to the slideshow</button>
+      </form>}
     </section>
   </div>;
 }

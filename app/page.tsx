@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HomepageSectionType } from "@prisma/client";
 import { CopyCode } from "@/components/store/copy-code";
 import { Icon } from "@/components/store/icons";
+import { HomeSlider } from "@/components/store/home-slider";
 import { ProductCard } from "@/components/store/product-card";
 import { db } from "@/lib/db";
 import { pageData } from "@/lib/page-data";
@@ -70,12 +71,15 @@ export default async function Home() {
   const budgetTiles = budgets.map((limit) => ({ limit, count: real.filter((entry) => entry.price <= limit * 100).length })).filter((tile) => tile.count > 0);
   const spotlight = (onOffer.length >= 2 ? onOffer : real).slice(0, 2);
 
+  const slides = banners.filter((banner) => banner.imageUrl).map((banner) => ({ id: banner.id, title: banner.title, href: banner.linkUrl, image: banner.imageUrl, mobile: banner.mobileImageUrl }));
+
   const defaults = [HomepageSectionType.HERO, HomepageSectionType.CATEGORIES, HomepageSectionType.FEATURED_PRODUCTS, HomepageSectionType.COLLECTION, HomepageSectionType.BRANDS, HomepageSectionType.TRUST];
   const visible = sections.length ? sections : defaults.map((type, position) => ({ id: type, type, title: null, subtitle: null, position }));
   const points: [string, string][] = [["shield", "Warranty on every device"], ["return", `${returnDays}-day easy returns`], ["truck", `Free delivery over ${inr(freeFrom)}`]];
 
   return <div className="home">{visible.map((section) => {
     if (section.type === HomepageSectionType.HERO) return <div key={section.id}>
+      {slides.length > 0 && <div className="slider-wrap"><HomeSlider slides={slides} /></div>}
       <section className="hero">
         <div className="hero-copy">
           <span className="hero-pill"><Icon name="check" size={15} /> New, certified refurbished &amp; pre-owned</span>
@@ -115,7 +119,7 @@ export default async function Home() {
       {budgetTiles.length > 0 && <section className="home-section"><div className="home-head"><div><h2>Shop by budget</h2></div></div><div className="budget-chips">{budgetTiles.map((tile) => <Link key={tile.limit} href={`/products?max=${tile.limit}&sort=price-asc`}><small>Under</small><b>{inr(tile.limit * 100)}</b><span>{tile.count} products →</span></Link>)}</div></section>}
     </div>;
 
-    if (section.type === HomepageSectionType.PROMO_BANNER) { const banner = banners[1]; return banner ? <Link className="promo-banner" href={banner.linkUrl ?? "/products"} key={section.id}><img src={banner.imageUrl} alt="" /><span><b>{banner.title}</b><small>{banner.subtitle}</small></span></Link> : null; }
+    if (section.type === HomepageSectionType.PROMO_BANNER) return null; // offers now live in the slideshow at the top
 
     if (section.type === HomepageSectionType.TRUST) return <section className="home-section" key={section.id}><div className="why"><div className="home-head"><div><h2>Why shop with Mobile &amp; More</h2></div></div><div className="why-grid"><article><span><Icon name="shield" /></span><b>Tested and covered</b><p>Every device is checked before it ships. Refurbished phones carry a 6-month warranty.</p></article><article><span><Icon name="return" /></span><b>{returnDays}-day easy returns</b><p>Not what you expected? Start a return from your account in a couple of taps.</p></article><article><span><Icon name="lock" /></span><b>Safe, verified payments</b><p>Pay with UPI, cards or net banking. Orders are confirmed only after your payment is verified.</p></article></div></div></section>;
     return null;
