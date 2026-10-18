@@ -11,9 +11,8 @@ type Address = { id: string; name: string; phone: string; line1: string; line2: 
 type Gateway = { id: string; label: string; available: boolean; reason: string };
 type ShippingOption = { ruleId?: string; name: string; charge: number; estimatedDaysMin: number; estimatedDaysMax: number };
 type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
-type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; prefill: { name: string; contact: string }; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void }; method?: Record<string, boolean>; theme?: { color: string } };
+type RazorpayOptions = { key: string; order_id: string; amount: number; currency: string; name: string; description: string; prefill: { name: string; contact: string }; handler: (result: RazorpayResult) => void; modal: { ondismiss: () => void }; theme?: { color: string } };
 declare global { interface Window { Razorpay: new (options: RazorpayOptions) => { open(): void } } }
-type PayMethod = "upi" | "card" | "netbanking" | "wallet";
 type CartView = { items: { id: string; quantity: number; product: { name: string; images: { url: string }[] }; variant: { title: string } | null }[]; totals: { subtotal: number; discount: number; tax: number; shipping: number; total: number; couponCode?: string | null; couponError?: string } };
 const fields = ["name", "phone", "line1", "line2", "city", "state", "pincode"] as const;
 const AUTO = "__auto__";
@@ -26,7 +25,6 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const availableGateways = gateways.filter((item) => item.available);
   const firstGateway = availableGateways[0]?.id ?? "";
   const [gateway, setGateway] = useState(firstGateway);
-  const [method, setMethod] = useState<PayMethod>("upi");
   const [cart, setCart] = useState<CartView | null>(null);
   useEffect(() => { safeFetch("/api/cart").then((response) => response.json()).then((result) => setCart(result.data)).catch(() => setCart(null)); }, []);
   const [couponInput, setCouponInput] = useState("");
@@ -98,7 +96,7 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
       if (gateway !== "RAZORPAY") throw new Error("This payment method is awaiting merchant activation.");
       await loadRazorpay();
       const checkoutData = intent.data.checkoutData as { key: string; razorpayOrderId: string };
-      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, theme: { color: "#fb6b48" }, method: { upi: method === "upi", card: method === "card", netbanking: method === "netbanking", wallet: method === "wallet", emi: false, paylater: false }, handler: async (gatewayResult) => { const verification = await safeFetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
+      new window.Razorpay({ key: checkoutData.key, order_id: checkoutData.razorpayOrderId, amount: intent.data.amount, currency: intent.data.currency, name: brand.name, description: `Order ${result.data.orderNumber}`, prefill: { name: String(address.name), contact: String(address.phone) }, theme: { color: "#fb6b48" }, handler: async (gatewayResult) => { const verification = await safeFetch("/api/payments/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ paymentId: result.data.paymentId, payload: gatewayResult }) }); const verified = await verification.json(); if (!verification.ok) { setLoading(false); setError(verified.error ?? "Payment could not be verified. Please contact support before retrying."); return; } router.push(`/order-success/${verified.data.confirmationToken}`); }, modal: { ondismiss: () => { setLoading(false); setError("Payment was not completed. Your reserved order will expire automatically."); } } }).open();
     } catch (caught) { setLoading(false); setError(caught instanceof Error ? caught.message : "Payment could not be started."); }
   }
 
@@ -106,12 +104,6 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
   const holders: Partial<Record<(typeof fields)[number], string>> = { line1: "Flat / house no., building, street", line2: "Landmark, area", phone: "10-digit mobile number", pincode: "6 digits" };
   const autos: Record<(typeof fields)[number], string> = { name: "name", phone: "tel", line1: "address-line1", line2: "address-line2", city: "address-level2", state: "address-level1", pincode: "postal-code" };
   const spans: Record<(typeof fields)[number], string> = { name: "s3", phone: "s3", line1: "s6", line2: "s6", city: "s2", state: "s2", pincode: "s2" };
-  const methods: { id: PayMethod; title: string; note: string; icon: string }[] = [
-    { id: "upi", title: "UPI", note: "GPay, PhonePe, Paytm, BHIM", icon: "₹" },
-    { id: "card", title: "Cards", note: "Credit & debit cards", icon: "▭" },
-    { id: "netbanking", title: "Net banking", note: "All major banks", icon: "⌂" },
-    { id: "wallet", title: "Wallets", note: "Paytm, Mobikwik & more", icon: "◧" },
-  ];
   const items = cart?.items ?? [];
   const totals = cart?.totals;
   const delivery = chosenShipping ? chosenShipping.charge : totals?.shipping ?? 0;
@@ -154,9 +146,8 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
           {/* Only gateways the merchant has actually activated are offered; the others stay in the code and show up automatically once their credentials are added. */}
           {availableGateways.length > 1 && <label className="co-field s6">Pay with<select value={gateway} onChange={(event) => setGateway(event.target.value)}>{availableGateways.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
           <input type="hidden" name="gateway" value={availableGateways.length === 1 ? availableGateways[0].id : gateway} />
-          {razorpaySelected && <div className="co-methods" role="radiogroup" aria-label="Payment method">{methods.map((item) => <label key={item.id} className={method === item.id ? "co-method on" : "co-method"}><input type="radio" name="pay-method" checked={method === item.id} onChange={() => setMethod(item.id)} /><i aria-hidden>{item.icon}</i><b>{item.title}</b><span>{item.note}</span></label>)}</div>}
+          {razorpaySelected && <div className="co-securepay"><b>Secure payment by Razorpay</b><span>You will choose UPI, card, net banking or wallet on the next screen. We never see or store your payment details.</span></div>}
           {availableGateways.length === 0 && <p className="form-error" role="alert">Online payment is not available right now. Please try again later.</p>}
-          {razorpaySelected && <p className="co-hint">You&apos;ll enter your {method === "upi" ? "UPI ID or approve in your UPI app" : method === "card" ? "card details" : method === "netbanking" ? "bank login" : "wallet login"} in Razorpay&apos;s secure window. We never see or store it.</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
           <div className="co-pay-row">{placeButton("pay-main")}</div>
           <p className="consent-note">By placing your order you agree to our <Link href="/policies/terms-and-conditions" target="_blank">Terms &amp; Conditions</Link>, <Link href="/policies/privacy-policy" target="_blank">Privacy Policy</Link> and <Link href="/policies/refund-policy" target="_blank">Returns &amp; Refunds Policy</Link>.</p>

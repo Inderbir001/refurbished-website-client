@@ -3,7 +3,7 @@
 .auth-card { width: min(100%, 880px); display: grid; grid-template-columns: 0.82fr 1.18fr; min-height: 560px; background: #fff; border-radius: 22px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 70px rgba(20, 33, 31, .14); animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
 
 .auth-side { position: relative; padding: 38px 32px 26px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; color: #eff5e7; background: radial-gradient(120% 70% at 100% 0%, rgba(251, 107, 72, .38), transparent 60%), linear-gradient(160deg, #1c3833 0%, #0e1b19 100%); overflow: hidden; }
-.auth-side h1 { margin: 0 0 12px; font: 600 clamp(28px, 3.2vw, 36px)/1.1 'Playfair Display', serif; letter-spacing: -.02em; color: #fff; }
+.auth-side h1 { margin: 0 0 12px; font: 600 clamp(28px, 3.2vw, 36px)/1.1 var(--font-head), sans-serif; letter-spacing: -.02em; color: #fff; }
 .auth-lead { margin: 0 0 22px; font-size: 15.5px; line-height: 1.55; color: #c5d6cd; }
 .auth-perks { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; font-size: 14px; }
 .auth-perks li { display: flex; align-items: flex-start; gap: 10px; line-height: 1.4; }
@@ -12,7 +12,7 @@
 
 .auth-form { padding: 44px clamp(22px, 5vw, 48px) 34px; display: flex; align-items: center; }
 .auth-form form { width: 100%; display: grid; gap: 16px; }
-.auth-form h2 { margin: 0; font: 700 22px/1.2 'DM Sans', sans-serif; color: var(--ink); }
+.auth-form h2 { margin: 0; font: 700 22px/1.2 var(--font-body), sans-serif; color: var(--ink); }
 .auth-sub { margin: -8px 0 4px; color: var(--muted); font-size: 14px; }
 .auth-label { display: grid; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink); }
 .auth-label em { font-style: normal; font-weight: 400; color: var(--muted); }

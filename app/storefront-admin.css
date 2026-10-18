@@ -1,4 +1,4 @@
-.storefront-admin h2 { font: 600 24px 'Playfair Display', serif; margin: 26px 0 6px; }
+.storefront-admin h2 { font: 600 24px var(--font-head), sans-serif; margin: 26px 0 6px; }
 .storefront-admin h2:first-child { margin-top: 4px; }
 .sf-hint { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 0 0 14px; max-width: 720px; }
 .sf-hint a { color: var(--orange); font-weight: 600; }

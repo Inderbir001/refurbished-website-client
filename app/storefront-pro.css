@@ -1,0 +1,20 @@
+/* ===== Storefront polish: typography, announcement bar, product cards ===== */
+body { font-family: var(--font-body), system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3 { font-family: var(--font-head), sans-serif; }
+.eyebrow { font-family: var(--font-body), sans-serif; font-weight: 600; letter-spacing: .1em; }
+
+/* announcement bar: calmer, readable */
+.announcement { font-family: var(--font-body), sans-serif; font-size: 12.5px; font-weight: 500; letter-spacing: .02em; }
+
+/* product cards: photo shown whole on a clean light panel, tidy text */
+.product-card { background: #fff; border-color: #ecebe4; border-radius: 18px; }
+.product-card .product-image { height: 236px; padding: 18px; background: #f6f6f2; }
+.product-card .product-image img { width: 100%; height: 100%; object-fit: contain; }
+.product-card:hover .product-image img { transform: scale(1.05); }
+.product-card .product-copy { padding: 16px 16px 18px; }
+.product-card .eyebrow { margin-bottom: 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6d7c77; }
+.product-card .product-name { font-weight: 600; font-size: 15px; color: var(--ink); }
+.product-card .price-row strong { font: 800 20px var(--font-head), sans-serif; letter-spacing: -.02em; }
+.product-card .price-row del { font-size: 13px; }
+.card-specs span { font-weight: 600; }
+@media (max-width: 600px) { .product-card .product-image { height: 170px; padding: 12px; } .product-card .product-copy { padding: 12px 12px 14px; } .product-card .product-name { font-size: 13.5px; } .product-card .price-row strong { font-size: 17px; } }

@@ -80,7 +80,7 @@ export function HomepageControls({ sections: initialSections, banners: initialBa
       <p className="step-hint">The first showing banner is the background of the top banner; the second is the promo banner. Paste a picture link (starts with https).</p>
       {banners.length ? <ul className="hp-banners">{banners.map((banner, index) => <li key={banner.id} className={banner.isVisible ? "" : "off"}>
         <img src={banner.imageUrl} alt="" />
-        <div><b>{banner.title}</b><small>{index === 0 ? "Top banner background" : index === 1 ? "Promo banner" : `Extra banner ${index + 1}`}{banner.linkUrl ? ` · opens ${banner.linkUrl}` : ""}</small></div>
+        <div><b>{banner.title}</b><small>{index === 0 ? "Spare banner (not shown on the homepage)" : index === 1 ? "Promo banner" : `Extra banner ${index + 1}`}{banner.linkUrl ? ` · opens ${banner.linkUrl}` : ""}</small></div>
         <div className="hp-actions"><button type="button" disabled={busy} onClick={async () => { if (await call("/api/admin/homepage/banners", "PATCH", { id: banner.id, isVisible: !banner.isVisible }, banner.isVisible ? "Banner hidden." : "Banner showing.")) setBanners((list) => list.map((item) => (item.id === banner.id ? { ...item, isVisible: !banner.isVisible } : item))); }}>{banner.isVisible ? "Hide" : "Show"}</button><button type="button" className="danger" disabled={busy} onClick={async () => { if (confirm(`Delete “${banner.title}”?`) && (await call("/api/admin/homepage/banners", "DELETE", { id: banner.id }, "Banner deleted."))) setBanners((list) => list.filter((item) => item.id !== banner.id)); }}>Delete</button></div>
       </li>)}</ul> : <p className="step-hint">No banners yet.</p>}
       <details className="hp-add"><summary>+ Add a banner</summary>

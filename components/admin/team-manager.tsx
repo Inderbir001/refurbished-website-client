@@ -51,7 +51,7 @@ export function TeamManager({ members, me, canManage }: { members: Member[]; me:
               <td><b>{member.name}</b>{self && <span className="adm-pill muted" style={{ marginLeft: 8 }}>You</span>}</td>
               <td><small>{member.contact}</small></td>
               <td>{canManage && !self
-                ? <select aria-label={`Access for ${member.name}`} value={member.role} disabled={busy === member.id} onChange={(event) => call("PATCH", { id: member.id, role: event.target.value }, member.id, "Access updated.")} style={{ padding: "8px 10px", border: "1.5px solid var(--line)", borderRadius: 10, background: "#fff", font: "600 13px 'DM Sans', sans-serif" }}>{ROLES.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select>
+                ? <select aria-label={`Access for ${member.name}`} value={member.role} disabled={busy === member.id} onChange={(event) => call("PATCH", { id: member.id, role: event.target.value }, member.id, "Access updated.")} style={{ padding: "8px 10px", border: "1.5px solid var(--line)", borderRadius: 10, background: "#fff", font: "600 13px var(--font-body), sans-serif" }}>{ROLES.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select>
                 : roleName(member.role)}</td>
               <td><span className={`adm-pill ${member.isActive ? "ok" : "muted"}`}>{member.isActive ? "Active" : "Switched off"}</span></td>
               {canManage && <td className="r">{!self && <span style={{ display: "inline-flex", gap: 8 }}>
