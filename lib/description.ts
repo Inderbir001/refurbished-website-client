@@ -74,9 +74,11 @@ export function plainDescription(raw: string | null | undefined, max = 155) {
 export function highlights(blocks: DescBlock[], count = 4): string[] {
   const items = blocks.flatMap((block) => (block.kind === "list" ? block.items : []));
   const labelled = items.filter((item) => item.label);
-  const source = labelled.length >= 2 ? labelled : items;
+  // Long sentences are never cut down to a preview (that reads like missing words): without labels, only short points qualify.
+  const source = labelled.length >= 2 ? labelled : items.filter((item) => !item.label && item.text.length <= 52 && !/[.!?]$/.test(item.text));
+  if (source.length < 2) return [];
   return source.slice(0, count).map((item) => {
-    const spec = item.label && item.label.split(/\s+/).length <= 2 && /^[\d"~(]/.test(item.text);
+    const spec = item.label && item.label.split(/\s+/).length <= 2 && /^[\d"~(]/.test(item.text) && item.label.length + item.text.length <= 48;
     const text = item.label ? (spec ? `${item.label}: ${item.text}` : item.label) : item.text;
     const clean = text.replace(/[.;,]+$/, "");
     return clean.length > 64 ? `${clean.slice(0, 61).trimEnd()}…` : clean;

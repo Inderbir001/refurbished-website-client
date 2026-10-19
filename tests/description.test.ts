@@ -48,6 +48,12 @@ describe("product description layout", () => {
     if (list.kind === "list") expect(list.items.map((item) => item.label)).toEqual(["Stunning Shots", "Custom Action Key"]);
   });
 
+  it("never cuts long sentences into highlights", () => {
+    const sentences = "• The perfect way to add some style and stand out from the crowd with these earphones\n• The stylish earphones are a definite fashion statement for everyone who wants one";
+    expect(highlights(parseDescription(sentences))).toEqual([]);
+    expect(highlights(parseDescription("• Deep bass\n• Magnetic earbuds\n• 60 hours playback"))).toEqual(["Deep bass", "Magnetic earbuds", "60 hours playback"]);
+  });
+
   it("keeps bullets, headings and paragraphs apart", () => {
     const blocks = parseDescription("Great charger for everyday use.\n\nKey Features:\n\n• High-Speed Charging: 100W output.\n\n• Three ports for versatility");
     expect(blocks.map((block) => block.kind)).toEqual(["paragraph", "heading", "list"]);
