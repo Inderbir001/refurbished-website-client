@@ -31,17 +31,21 @@ export function ScrollReveal() {
       }
     }, { threshold: 0.1, rootMargin: "0px 0px -5% 0px" });
 
-    document.querySelectorAll<HTMLElement>(AUTO_GROUPS).forEach((element) => element.setAttribute("data-reveal-group", ""));
-    document.querySelectorAll<HTMLElement>(AUTO_ITEMS).forEach((element) => { if (!element.hasAttribute("data-reveal-group")) element.setAttribute("data-reveal", ""); });
-    document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group]").forEach((element) => {
-      if (element.classList.contains("rv-in") || element.classList.contains("rv-pending")) return;
-      const rect = element.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) return;
-      if (element.hasAttribute("data-reveal-group")) Array.from(element.children).forEach((child, index) => (child as HTMLElement).style.setProperty("--i", String(Math.min(index, 10))));
-      element.classList.add("rv-pending");
-      observer.observe(element);
-    });
-    return () => observer.disconnect();
+    // Wait until React has finished hydrating the page: changing server-rendered elements before that triggers hydration warnings.
+    const setup = () => {
+      document.querySelectorAll<HTMLElement>(AUTO_GROUPS).forEach((element) => element.setAttribute("data-reveal-group", ""));
+      document.querySelectorAll<HTMLElement>(AUTO_ITEMS).forEach((element) => { if (!element.hasAttribute("data-reveal-group")) element.setAttribute("data-reveal", ""); });
+      document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group]").forEach((element) => {
+        if (element.classList.contains("rv-in") || element.classList.contains("rv-pending")) return;
+        const rect = element.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) return;
+        if (element.hasAttribute("data-reveal-group")) Array.from(element.children).forEach((child, index) => (child as HTMLElement).style.setProperty("--i", String(Math.min(index, 10))));
+        element.classList.add("rv-pending");
+        observer.observe(element);
+      });
+    };
+    const timer = window.setTimeout(() => requestAnimationFrame(setup), 350);
+    return () => { window.clearTimeout(timer); observer.disconnect(); };
   }, [pathname]);
 
   return null;

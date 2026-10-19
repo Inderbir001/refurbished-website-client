@@ -69,7 +69,9 @@ export const pageLoaders = {
     const [product, session] = await Promise.all([memo(`product:${args.slug}`, () => getProduct(args.slug)), args.token ? verifySessionLocally(args.token) : Promise.resolve(null)]);
     const canReview = product && session ? Boolean(await db.orderItem.findFirst({ where: { productId: product.id, order: { userId: session.sub, status: "DELIVERED", paymentStatus: "SUCCESS" } }, select: { id: true } })) : false;
     const policy = await memo("store-policy", async () => (await db.storeSettings.findFirst({ select: { returnDays: true, freeShippingThreshold: true } })) ?? { returnDays: 7, freeShippingThreshold: 49_900 });
-    return { product, canReview, policy };
+    // How many have really been bought (paid, not cancelled or returned): shown only when it is a meaningful number.
+    const sold = product ? memo(`product-sold:${product.id}`, async () => (await db.orderItem.aggregate({ where: { productId: product.id, order: { paymentStatus: "SUCCESS", status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] } } }, _sum: { quantity: true } }))._sum.quantity ?? 0) : Promise.resolve(0);
+    return { product, canReview, policy, sold: await sold };
   },
 };
 
