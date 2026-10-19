@@ -94,3 +94,12 @@ a, button, summary, [role="button"], label { -webkit-tap-highlight-color: rgba(2
 .header-search .search-suggestions { border-color: #dfe8e3; box-shadow: 0 24px 50px rgba(20, 33, 31, .2); }
 .header-search .search-suggestions a:hover { background: #eef5f1; }
 .header-search .search-suggestions small { background: #e3efe8; color: #1f3b32; }
+
+/* ===== laptop header: the search sits exactly in the middle of the page, and is longer ===== */
+@media (min-width: 901px) {
+  .sh-main { grid-template-columns: minmax(max-content, 1fr) minmax(0, 900px) minmax(max-content, 1fr); }
+  .sh-logo { justify-self: start; }
+  .sh-actions { justify-self: end; }
+  .sh-search { max-width: none; margin: 0; }
+}
+@media (min-width: 901px) { .sh-search .header-search { max-width: none; width: 100%; } }
