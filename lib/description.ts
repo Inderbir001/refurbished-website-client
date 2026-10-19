@@ -12,7 +12,7 @@ const BULLET = /^\s*(?:[•▪●◦·✓✔►▶➤*]|[-–—](?=\s))\s*/;
 const LABELLED = /^([A-Z0-9][^:\n]{1,48}?):\s+(\S[\s\S]*)$/;
 // Never split inside a number with a unit ("5000mAh", "90Hz"): the break is only allowed after a letter/bracket that is not part of such a figure.
 const DASHED = /^([A-Z0-9][^—–:\n]{1,48}?)\s+[—–]\s+(\S[\s\S]*)$/; // "Stunning Shots — The 50MP camera…"
-const GLUED_LABEL =/((?<![A-Z])[a-z]|[)\]"”'’%.])(?<!\d[a-z]{0,3})(?=[A-Z][A-Za-z0-9&/+-]*(?: (?:[A-Z0-9][A-Za-z0-9&/+-]*|&|and|of|for|with|in|to)){0,3}:\s)/g;
+const GLUED_LABEL =/(?:[)\]"”%.]|[a-z](?<=(?<![A-Za-z0-9])[a-z][a-z'-]*))(?<!\d ?[a-z]{0,3})(?!At )(?=[A-Z][A-Za-z0-9&/+-]*(?: (?:[A-Z0-9][A-Za-z0-9&/+-]*|&|and|of|for|with|in|to)){0,3}:\s)/g;
 
 function sentences(text: string) {
   // A very long paragraph is split into readable chunks of two or three sentences.
@@ -30,7 +30,7 @@ export function parseDescription(raw: string | null | undefined): DescBlock[] {
   let text = (raw ?? "").replace(/\r\n?/g, "\n").replace(/ /g, " ").trim();
   if (!text) return [];
   text = text.replace(/([^\n])[ \t]*[•▪●][ \t]*/g, "$1\n• "); // bullets in the middle of a line start a new line
-  text = text.replace(GLUED_LABEL, "$1\n"); // "…refresh rateProcessor: …" -> two lines
+  text = text.replace(GLUED_LABEL, "$&\n"); // "…refresh rateProcessor: …" -> two lines
 
   const blocks: DescBlock[] = [];
   let list: DescItem[] | null = null;
@@ -44,7 +44,7 @@ export function parseDescription(raw: string | null | undefined): DescBlock[] {
     const body = line.replace(BULLET, "").trim();
     if (!body) continue;
     const labelled = body.match(LABELLED) ?? body.match(DASHED);
-    const label = labelled && labelled[1].split(/\s+/).length <= 7 && !/[.!?]|https?:/i.test(labelled[1]) ? labelled : null;
+    const label = labelled && labelled[1].split(/\s+/).length <= 7 && !/[a-z)][.!?](?:\s|$)|[!?]|https?:/i.test(labelled[1]) ? labelled : null;
 
     if (!bullet && /:$/.test(body) && body.length <= 60) { flush(); blocks.push({ kind: "heading", text: body.replace(/:$/, "") }); continue; }
     if (!bullet && body.length <= 50 && /^[^a-z]*[A-Z][^a-z]*$/.test(body) && /[A-Z]{3}/.test(body)) { flush(); blocks.push({ kind: "heading", text: body }); continue; }

@@ -17,6 +17,13 @@ describe("product description layout", () => {
     if (list.kind === "list") expect(list.items.map((item) => item.label)).toEqual(["Massive 5000mAh Battery", "Smooth 90Hz HD+ Display"]);
   });
 
+  it("does not cut a unit that has a space before it", () => {
+    const blocks = parseDescription("• 10001 mAh Battery Capacity: Massive battery power.\n• 6.8 Inch Full HD+ AMOLED Display: Large immersive screen.");
+    const list = blocks[0];
+    expect(blocks).toHaveLength(1);
+    if (list.kind === "list") expect(list.items.map((item) => item.label)).toEqual(["10001 mAh Battery Capacity", "6.8 Inch Full HD+ AMOLED Display"]);
+  });
+
   it("keeps mixed-case words like GaN whole", () => {
     const blocks = parseDescription("• Fast Charging: 100W output.\n• GaN Technology: Smaller and cooler.");
     const list = blocks[0];
