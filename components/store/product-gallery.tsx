@@ -1,31 +1,45 @@
 "use client";
 import { useState } from "react";
+import { parseVideo } from "@/lib/video";
 
 type Photo = { id: string; url: string; alt: string | null };
+type Item = { key: string; kind: "photo"; url: string; alt: string | null } | { key: string; kind: "video"; url: string };
 
-// The big photo plus a row of small ones. Clicking a small photo (or the arrows) shows it in the big frame.
-// Hovering the big photo magnifies it around the pointer (mouse devices only; the CSS ignores touch screens).
+// The big picture plus a row of small ones. Photos first, then videos (marked with a play button).
+// Clicking a small one (or the arrows / arrow keys) shows it in the big frame. Hovering a photo magnifies it (mouse devices only).
 function track(event: React.MouseEvent<HTMLDivElement>) {
   const box = event.currentTarget.getBoundingClientRect();
   event.currentTarget.style.setProperty("--zx", `${((event.clientX - box.left) / box.width) * 100}%`);
   event.currentTarget.style.setProperty("--zy", `${((event.clientY - box.top) / box.height) * 100}%`);
 }
-export function ProductGallery({ images, name }: { images: Photo[]; name: string }) {
+
+export function ProductGallery({ images, videos = [], name }: { images: Photo[]; videos?: string[]; name: string }) {
   const [index, setIndex] = useState(0);
-  if (!images.length) return <div className="gallery"><div className="main-image">Product photo coming soon</div></div>;
-  const current = images[Math.min(index, images.length - 1)];
-  const go = (step: number) => setIndex((value) => (value + step + images.length) % images.length);
+  const items: Item[] = [...images.map((image): Item => ({ key: image.id, kind: "photo", url: image.url, alt: image.alt })), ...videos.filter((url) => parseVideo(url)).map((url): Item => ({ key: url, kind: "video", url }))];
+  if (!items.length) return <div className="gallery"><div className="main-image">Product photo coming soon</div></div>;
+  const current = items[Math.min(index, items.length - 1)];
+  const go = (step: number) => setIndex((value) => (value + step + items.length) % items.length);
+  const info = current.kind === "video" ? parseVideo(current.url) : null;
+
   return <div className="gallery" onKeyDown={(event) => { if (event.key === "ArrowLeft") go(-1); if (event.key === "ArrowRight") go(1); }}>
-    <div className="main-image" onMouseMove={track}>
-      <img src={current.url} alt={current.alt ?? name} />
-      {images.length > 1 && <>
-        <button type="button" className="gallery-nav prev" aria-label="Previous photo" onClick={() => go(-1)}>‹</button>
-        <button type="button" className="gallery-nav next" aria-label="Next photo" onClick={() => go(1)}>›</button>
-        <span className="gallery-count">{index + 1} / {images.length}</span>
+    <div className={current.kind === "video" ? "main-image is-video" : "main-image"} onMouseMove={current.kind === "photo" ? track : undefined}>
+      {current.kind === "photo" && <img src={current.url} alt={current.alt ?? name} />}
+      {info?.kind === "file" && <video key={current.key} src={info.url} controls playsInline preload="metadata" aria-label={`Video of ${name}`} />}
+      {(info?.kind === "youtube" || info?.kind === "vimeo") && <iframe key={current.key} src={info.embed} title={`Video of ${name}`} allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />}
+      {items.length > 1 && <>
+        <button type="button" className="gallery-nav prev" aria-label="Previous" onClick={() => go(-1)}>‹</button>
+        <button type="button" className="gallery-nav next" aria-label="Next" onClick={() => go(1)}>›</button>
+        <span className="gallery-count">{index + 1} / {items.length}</span>
       </>}
     </div>
-    {images.length > 1 && <div className="thumbs">
-      {images.map((image, position) => <button key={image.id} type="button" className={position === index ? "on" : ""} aria-label={`Show photo ${position + 1} of ${images.length}`} aria-current={position === index} onClick={() => setIndex(position)}><img src={image.url} alt="" loading="lazy" /></button>)}
+    {items.length > 1 && <div className="thumbs">
+      {items.map((item, position) => {
+        const video = item.kind === "video" ? parseVideo(item.url) : null;
+        return <button key={item.key} type="button" className={`${position === index ? "on" : ""}${item.kind === "video" ? " vid" : ""}`.trim()} aria-label={item.kind === "video" ? `Play video ${position + 1 - images.length}` : `Show photo ${position + 1} of ${images.length}`} aria-current={position === index} onClick={() => setIndex(position)}>
+          {item.kind === "photo" ? <img src={item.url} alt="" loading="lazy" /> : video?.kind === "youtube" ? <img src={video.thumb} alt="" loading="lazy" /> : video?.kind === "file" ? <video src={`${video.url}#t=0.5`} preload="metadata" muted playsInline /> : <span className="vid-blank" />}
+          {item.kind === "video" && <i aria-hidden>▶</i>}
+        </button>;
+      })}
     </div>}
   </div>;
 }

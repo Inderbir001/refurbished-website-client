@@ -2,12 +2,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ImageListField } from "@/components/admin/image-field";
+import { VideoField } from "@/components/admin/video-field";
 import { fromPairs, KvEditor, toPairs, type Pair } from "@/components/admin/kv-editor";
 import { safeFetch } from "@/lib/safe-fetch";
 
 type Option = { id: string; name: string };
 type Variant = { id?: string; title: string; sku: string; barcode: string; price: number | null; salePrice: number | null; stock: number; lowStockThreshold: number; weightGrams: number | null; attributes: Record<string, string> };
-type ProductValue = { id: string; name: string; slug: string; description: string; sku: string; basePrice: number; salePrice: number | null; costPrice: number | null; taxRate: number; condition: string; status: string; categoryId: string | null; brandId: string | null; warrantyMonths: number; tags: string[]; grade: string | null; whatsIncluded: string | null; specifications: Record<string, string>; dimensions: Record<string, string>; seoTitle: string | null; seoDescription: string | null; variants: Variant[]; images: { url: string; alt: string | null; position: number }[] };
+type ProductValue = { id: string; name: string; slug: string; description: string; sku: string; basePrice: number; salePrice: number | null; costPrice: number | null; taxRate: number; condition: string; status: string; categoryId: string | null; brandId: string | null; warrantyMonths: number; tags: string[]; grade: string | null; whatsIncluded: string | null; videoUrls?: string[]; specifications: Record<string, string>; dimensions: Record<string, string>; seoTitle: string | null; seoDescription: string | null; variants: Variant[]; images: { url: string; alt: string | null; position: number }[] };
 
 const toPaise = (value: FormDataEntryValue | null) => (value && String(value).trim() !== "" ? Math.round(Number(value) * 100) : null);
 const CONDITIONS: [string, string][] = [["NEW", "New"], ["REFURBISHED", "Refurbished"], ["USED", "Used"]];
@@ -19,6 +20,7 @@ export function ProductEditor({ product, categories, brands, created = false }: 
   const [options, setOptions] = useState(product.variants.length > 1);
   const [condition, setCondition] = useState(product.condition);
   const [live, setLive] = useState(product.status === "ACTIVE");
+  const [videos, setVideos] = useState<string[]>(product.videoUrls ?? []);
   const [specs, setSpecs] = useState<Pair[]>(toPairs(product.specifications));
   const [dims, setDims] = useState<Pair[]>(toPairs(product.dimensions));
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(created ? { ok: true, text: "Product published. Add more details below if you like." } : null);
@@ -34,7 +36,7 @@ export function ProductEditor({ product, categories, brands, created = false }: 
         condition, status: live ? "ACTIVE" : product.status === "ARCHIVED" ? "ARCHIVED" : "DRAFT",
         categoryId: form.get("categoryId") || null, brandId: form.get("brandId") || null, warrantyMonths: Number(form.get("warrantyMonths") || 0),
         tags: String(form.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean), grade: condition === "NEW" ? null : form.get("grade") || null,
-        whatsIncluded: form.get("whatsIncluded") || null, specifications: fromPairs(specs), dimensions: fromPairs(dims),
+        whatsIncluded: form.get("whatsIncluded") || null, videoUrls: videos, specifications: fromPairs(specs), dimensions: fromPairs(dims),
         seoTitle: form.get("seoTitle") || null, seoDescription: form.get("seoDescription") || null, images, variants,
       };
       const response = await safeFetch(`/api/admin/products/${product.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
@@ -80,6 +82,11 @@ export function ProductEditor({ product, categories, brands, created = false }: 
     <section className="adm-card">
       <h2>Photos<small className="adm-card-sub">The first photo is the main one. Upload from your computer or phone.</small></h2>
       <ImageListField name="images" label="" alt={product.name} defaultValue={product.images.map((image) => image.url)} />
+    </section>
+
+    <section className="adm-card">
+      <h2>Videos<small className="adm-card-sub">Show the product in action. Optional, and a short video sells well.</small></h2>
+      <VideoField value={videos} onChange={setVideos} />
     </section>
 
     <section className="adm-card">

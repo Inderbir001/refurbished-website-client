@@ -223,6 +223,7 @@ model Product {
   tags           String[]            @default([])
   grade          String?
   whatsIncluded  String?             @db.Text
+  videoUrls         String[]             @default([])
   seoTitle       String?
   seoDescription String?
   images         ProductImage[]
