@@ -1,0 +1,57 @@
+/* ===== Motion: the finishing touches that make the storefront feel premium ===== */
+/* Only transform and opacity are animated, and everything is switched off for people who ask for less motion. */
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* buttons catch the light when you hover them */
+  .btn-solid, .panel-btn, .primary-button { position: relative; overflow: hidden; isolation: isolate; }
+  .btn-solid::after, .panel-btn::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .38) 50%, transparent 70%); transform: translateX(-130%); transition: transform .8s cubic-bezier(.22, 1, .36, 1); pointer-events: none; }
+  .btn-solid:hover::after, .panel-btn:hover::after { transform: translateX(130%); }
+
+  /* banners breathe: a slow settle-in zoom on the visible slide */
+  .slide.on img { animation: kenburns 9s ease-out both; }
+
+  /* soft glows inside the coloured panels drift slowly */
+  .panel::before { animation: drift 16s ease-in-out infinite alternate; }
+  .panel::after { animation: drift 20s ease-in-out infinite alternate-reverse; }
+  .help2::before { animation: drift 14s ease-in-out infinite alternate; }
+  .why2-cards article::after { transition: transform .6s cubic-bezier(.22, 1, .36, 1); }
+  .why2-cards article:hover::after { transform: scale(1.5) translate(-10px, 10px); }
+
+  /* icons and badges get a little personality */
+  .why2-cards article > span, .head-icon, .help2-icon { transition: transform .4s cubic-bezier(.34, 1.56, .64, 1); }
+  .why2-cards article:hover > span { transform: rotate(-8deg) scale(1.12); }
+  .home-head:hover .head-icon { transform: rotate(-10deg) scale(1.1); }
+  .discount-badge { animation: badgeIn .6s cubic-bezier(.34, 1.56, .64, 1) backwards .15s; }
+
+  /* product photos ease in and respond to the pointer */
+  .product-card .product-image img { transition: transform .8s cubic-bezier(.22, 1, .36, 1); }
+  .product-card:hover .product-image img { transform: scale(1.07); }
+  .cbub b, .btile > b { transition: color .2s; }
+  .cbub:hover b, .btile:hover > b { color: var(--orange); }
+
+  /* links in the footer and policy pages draw an underline */
+  footer a, .policy-list a { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1.5px no-repeat; transition: background-size .3s ease, color .2s; }
+  footer a:hover, .policy-list a:hover { background-size: 100% 1.5px; }
+
+  /* the page head and gallery arrive with the page */
+  .product-detail .gallery { animation: rise .8s cubic-bezier(.22, 1, .36, 1) backwards; }
+  .product-detail .detail-copy > * { animation: rise .7s cubic-bezier(.22, 1, .36, 1) backwards; }
+  .product-detail .detail-copy > :nth-child(2) { animation-delay: .06s; }
+  .product-detail .detail-copy > :nth-child(3) { animation-delay: .12s; }
+  .product-detail .detail-copy > :nth-child(4) { animation-delay: .18s; }
+  .product-detail .detail-copy > :nth-child(n+5) { animation-delay: .24s; }
+
+  /* faq and accordion rows open smoothly */
+  .faq details[open] > p, .acc[open] > p, .desc-more[open] > :not(summary) { animation: fadeDown .35s ease both; }
+
+  /* the slideshow dot fills up while its slide is showing */
+  .slider-dots button.on { background: linear-gradient(90deg, var(--orange) 50%, rgba(255, 255, 255, .6) 50%); background-size: 200% 100%; animation: dotfill var(--iv, 5.5s) linear forwards; }
+  .slider.is-stopped .slider-dots button.on { animation-play-state: paused; }
+}
+
+@keyframes kenburns { from { transform: scale(1.07); } to { transform: scale(1); } }
+@keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-34px, 26px) scale(1.1); } }
+@keyframes badgeIn { from { opacity: 0; transform: scale(.4) rotate(-12deg); } to { opacity: 1; transform: none; } }
+@keyframes fadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes dotfill { from { background-position: 100% 0; } to { background-position: 0 0; } }

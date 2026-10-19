@@ -15,6 +15,7 @@ import "./premium.css";
 import "./content-pages.css";
 import "./storefront-pro.css";
 import "./auth.css";
+import "./motion.css";
 import { Header } from "@/components/store/header";
 import { brand } from "@/lib/brand";
 import { Footer } from "@/components/store/footer";

@@ -34,6 +34,13 @@ describe("product description layout", () => {
     expect(blocks.map((block) => block.kind)).toEqual(["heading", "list"]);
   });
 
+  it("reads \"Title — text\" lines as titled rows", () => {
+    const blocks = parseDescription("Stunning Shots — The 50MP camera is sharp.\nCustom Action Key — One button, many shortcuts.");
+    const list = blocks[0];
+    expect(blocks).toHaveLength(1);
+    if (list.kind === "list") expect(list.items.map((item) => item.label)).toEqual(["Stunning Shots", "Custom Action Key"]);
+  });
+
   it("keeps bullets, headings and paragraphs apart", () => {
     const blocks = parseDescription("Great charger for everyday use.\n\nKey Features:\n\n• High-Speed Charging: 100W output.\n\n• Three ports for versatility");
     expect(blocks.map((block) => block.kind)).toEqual(["paragraph", "heading", "list"]);

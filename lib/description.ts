@@ -11,7 +11,8 @@ export type DescBlock =
 const BULLET = /^\s*(?:[•▪●◦·✓✔►▶➤*]|[-–—](?=\s))\s*/;
 const LABELLED = /^([A-Z0-9][^:\n]{1,48}?):\s+(\S[\s\S]*)$/;
 // Never split inside a number with a unit ("5000mAh", "90Hz"): the break is only allowed after a letter/bracket that is not part of such a figure.
-const GLUED_LABEL = /((?<![A-Z])[a-z]|[)\]"”'’%.])(?<!\d[a-z]{0,3})(?=[A-Z][A-Za-z0-9&/+-]*(?: (?:[A-Z0-9][A-Za-z0-9&/+-]*|&|and|of|for|with|in|to)){0,3}:\s)/g;
+const DASHED = /^([A-Z0-9][^—–:\n]{1,48}?)\s+[—–]\s+(\S[\s\S]*)$/; // "Stunning Shots — The 50MP camera…"
+const GLUED_LABEL =/((?<![A-Z])[a-z]|[)\]"”'’%.])(?<!\d[a-z]{0,3})(?=[A-Z][A-Za-z0-9&/+-]*(?: (?:[A-Z0-9][A-Za-z0-9&/+-]*|&|and|of|for|with|in|to)){0,3}:\s)/g;
 
 function sentences(text: string) {
   // A very long paragraph is split into readable chunks of two or three sentences.
@@ -42,7 +43,7 @@ export function parseDescription(raw: string | null | undefined): DescBlock[] {
     const bullet = BULLET.test(line);
     const body = line.replace(BULLET, "").trim();
     if (!body) continue;
-    const labelled = body.match(LABELLED);
+    const labelled = body.match(LABELLED) ?? body.match(DASHED);
     const label = labelled && labelled[1].split(/\s+/).length <= 7 && !/[.!?]|https?:/i.test(labelled[1]) ? labelled : null;
 
     if (!bullet && /:$/.test(body) && body.length <= 60) { flush(); blocks.push({ kind: "heading", text: body.replace(/:$/, "") }); continue; }

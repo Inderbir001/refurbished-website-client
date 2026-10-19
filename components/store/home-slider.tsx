@@ -21,7 +21,7 @@ export function HomeSlider({ slides, interval = 5500 }: { slides: Slide[]; inter
   }, [index, paused, stopped, count, interval]);
 
   if (!count) return null;
-  return <section className="slider" aria-roledescription="carousel" aria-label="Current offers"
+  return <section className={paused || stopped ? "slider is-stopped" : "slider"} style={{ "--iv": `${interval}ms` } as React.CSSProperties} aria-roledescription="carousel" aria-label="Current offers"
     onKeyDown={(event) => { if (event.key === "ArrowLeft") go(index - 1); if (event.key === "ArrowRight") go(index + 1); }}
     onTouchStart={(event) => { touch.current = event.touches[0].clientX; setPaused(true); }}
     onTouchEnd={(event) => { const start = touch.current; touch.current = null; setPaused(false); if (start == null) return; const delta = event.changedTouches[0].clientX - start; if (Math.abs(delta) > 40) go(index + (delta < 0 ? 1 : -1)); }}>

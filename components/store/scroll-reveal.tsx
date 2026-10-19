@@ -6,6 +6,10 @@ import { useEffect } from "react";
 //  1. Elements marked data-reveal / data-reveal-group fade up as they scroll into view (children of a group stagger).
 //     Anything already on screen is left alone, so there is no flash and nothing is hidden without JavaScript.
 //  2. html[data-scrolled] lets the header gain a shadow once the page has moved.
+// Parts of the storefront that animate in without needing a data attribute in their markup.
+const AUTO_GROUPS = ".srow-track, .tiles, .why2-cards, .coupon-strip, .brand-chips, .budget-chips, .faq, .acc-group, .product-grid, .stat-grid";
+const AUTO_ITEMS = ".home-head, .panel, .why2-head, .help2, .detail-bottom, .brand-marquee";
+
 export function ScrollReveal() {
   const pathname = usePathname();
 
@@ -27,6 +31,8 @@ export function ScrollReveal() {
       }
     }, { threshold: 0.1, rootMargin: "0px 0px -5% 0px" });
 
+    document.querySelectorAll<HTMLElement>(AUTO_GROUPS).forEach((element) => element.setAttribute("data-reveal-group", ""));
+    document.querySelectorAll<HTMLElement>(AUTO_ITEMS).forEach((element) => { if (!element.hasAttribute("data-reveal-group")) element.setAttribute("data-reveal", ""); });
     document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group]").forEach((element) => {
       if (element.classList.contains("rv-in") || element.classList.contains("rv-pending")) return;
       const rect = element.getBoundingClientRect();
