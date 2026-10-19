@@ -63,7 +63,7 @@ function draw(canvas: HTMLCanvasElement, family: string, opts: Opts, photo: HTML
   if (opts.badge.trim()) {
     const size = mobile ? 24 : 26; ctx.font = `700 ${size}px ${family}`;
     const label = opts.badge.trim().toUpperCase(); ctx.letterSpacing = "1.5px"; const bw = ctx.measureText(label).width + 48; ctx.letterSpacing = "0px";
-    blocks.push({ h: size + 26, paint: (y) => { ctx.fillStyle = t.accent; pill(ctx, x0, y, bw, size + 24); ctx.fill(); ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.letterSpacing = "1.5px"; ctx.fillText(label, x0 + 22, y + (size + 24) / 2 + 1); ctx.letterSpacing = "0px"; } });
+    blocks.push({ h: size + 26, paint: (y) => { ctx.fillStyle = t.accent; pill(ctx, x0, y, bw, size + 24); ctx.fill(); ctx.font = `700 ${size}px ${family}`; ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.letterSpacing = "1.5px"; ctx.fillText(label, x0 + 22, y + (size + 24) / 2 + 1); ctx.letterSpacing = "0px"; } });
   }
   let hs = mobile ? 76 : 96; let lines: string[] = [];
   for (; hs >= 40; hs -= 4) { ctx.font = `800 ${hs}px ${family}`; lines = wrap(ctx, opts.headline.trim() || "Your headline", maxW); if (lines.length <= (mobile ? 2 : 3)) break; }
@@ -109,12 +109,13 @@ export function BannerStudio({ products, categories, onCreate, busy }: { product
   const desktop = useRef<HTMLCanvasElement>(null);
   const phone = useRef<HTMLCanvasElement>(null);
   const [family, setFamily] = useState("sans-serif");
+  const [fontsReady, setFontsReady] = useState(0); // bumps when the heading font has loaded, so the picture is redrawn with real text widths
   const theme = THEMES.find((item) => item.id === themeId) ?? THEMES[0];
 
   useEffect(() => {
     const head = getComputedStyle(document.documentElement).getPropertyValue("--font-head").trim() || "sans-serif";
     setFamily(head);
-    Promise.all([document.fonts.load(`800 40px ${head}`), document.fonts.load(`500 30px ${head}`), document.fonts.load(`700 30px ${head}`)]).catch(() => undefined);
+    Promise.all([document.fonts.load(`800 40px ${head}`), document.fonts.load(`500 30px ${head}`), document.fonts.load(`700 30px ${head}`)]).then(() => setFontsReady((n) => n + 1)).catch(() => undefined);
   }, []);
   useEffect(() => {
     let live = true; setError("");
@@ -126,7 +127,7 @@ export function BannerStudio({ products, categories, onCreate, busy }: { product
   useEffect(() => {
     const render = () => { if (desktop.current) draw(desktop.current, family, opts, photo, false); if (phone.current) draw(phone.current, family, opts, photo, true); };
     render(); document.fonts.ready.then(render);
-  }); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fontsReady, family, themeId, badge, headline, sub, price, button, side, photo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const matches = useMemo(() => { const text = search.trim().toLowerCase(); return products.filter((item) => !text || item.name.toLowerCase().includes(text)).slice(0, 24); }, [products, search]);
   const links: [string, string][] = [["/products", "All products"], ["/products?condition=REFURBISHED", "Refurbished phones"], ...categories.map((category): [string, string] => [`/category/${category.slug}`, `Category: ${category.name}`]), ...products.slice(0, 40).map((product): [string, string] => [`/products/${product.slug}`, `Product: ${product.name}`])];
