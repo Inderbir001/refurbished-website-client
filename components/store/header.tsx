@@ -26,7 +26,6 @@ export async function Header() {
         <Link href="/" className="wordmark sh-logo"><Wordmark /></Link>
         <div className="sh-search">
           <Suspense fallback={<div className="search-box header-search" />}><SearchBox variant="header" /></Suspense>
-          <Link href="/products" className="sh-shopall"><svg {...icon} width={18} height={18}><rect x="4" y="4" width="6.5" height="6.5" rx="1" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1" /></svg><span>Shop all</span></Link>
         </div>
         <div className="sh-actions">
           <Link href="/" className="sh-action"><svg {...icon}><path d="M4 11 12 4l8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></svg><span>Home</span></Link>
