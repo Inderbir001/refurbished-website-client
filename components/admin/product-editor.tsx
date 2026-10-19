@@ -61,7 +61,7 @@ export function ProductEditor({ product, categories, brands, created = false }: 
   const single = variants[0];
   const rupeeText = (paise: number | null) => (paise == null ? "" : String(paise / 100));
 
-  return <form action={save} className="adm-page" style={{ padding: 0, maxWidth: "none" }}>
+  return <form onSubmit={(event) => { event.preventDefault(); void save(new FormData(event.currentTarget)); }} className="adm-page" style={{ padding: 0, maxWidth: "none" }}>
     <section className="adm-card">
       <h2>Basic information</h2>
       <div className="adm-grid">

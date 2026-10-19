@@ -32,7 +32,7 @@ export function SettingsForm({ value }: { value: SettingsValue }) {
     if (response.ok) router.refresh();
   }
 
-  return <form action={save} className="adm-page" style={{ padding: 0, maxWidth: "none" }}>
+  return <form onSubmit={(event) => { event.preventDefault(); void save(new FormData(event.currentTarget)); }} className="adm-page" style={{ padding: 0, maxWidth: "none" }}>
     <section className="adm-card">
       <h2>Store details<small className="adm-card-sub">Shown to customers on the site, in emails and on invoices.</small></h2>
       <div className="adm-grid">
