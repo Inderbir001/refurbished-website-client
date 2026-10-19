@@ -139,7 +139,7 @@ export default async function Home() {
       {slides.length > 0
         ? <div className="slider-wrap"><HomeSlider slides={slides} /></div>
         : <section className="hero-lite"><div><span className="band-tag">New, certified refurbished &amp; pre-owned</span><p className="hero-lite-title">Quality electronics at honest prices</p><p>Every device is checked and graded before it ships, and comes with warranty.</p><div className="hero-lite-actions"><Link className="btn-solid" href="/products?sort=price-asc">Shop all deals</Link><Link className="btn-line" href="/products?condition=REFURBISHED">Refurbished{refurbSavings > 0 ? ` · save up to ${refurbSavings}%` : ""}</Link></div></div></section>}
-      <section className="trust-strip" aria-label="Why shop with us"><div>
+      <section className="home-trust" aria-label="Why shop with us"><div>
         {[["truck", "Free delivery", `On orders over ${inr(freeFrom)}`], ["return", `${returnDays}-day returns`, "Simple and hassle free"], ["shield", "Warranty included", "On every device we sell"], ["lock", "Secure payments", "UPI, cards, net banking"]].map(([icon, title, note]) => <article key={title}><span><Icon name={icon} size={22} /></span><div><b>{title}</b><small>{note}</small></div></article>)}
       </div></section>
     </>}
