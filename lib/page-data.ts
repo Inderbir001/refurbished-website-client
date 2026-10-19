@@ -36,15 +36,18 @@ export const pageLoaders = {
 
   home: () => memo("home", async () => {
     const now = new Date();
-    const [store, sections, banners, deals, coupons, collections] = await Promise.all([
+    const [store, sections, banners, deals, coupons, collections, bestCollection, sales] = await Promise.all([
       db.store.findFirst({ include: { settings: true } }),
       db.homepageSection.findMany({ where: { isVisible: true }, orderBy: { position: "asc" } }),
       db.homepageBanner.findMany({ where: { isVisible: true, AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] }, orderBy: { position: "asc" } }),
       listDeals(),
       db.coupon.findMany({ where: { isActive: true, startsAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, orderBy: { createdAt: "desc" }, take: 12 }),
       db.collection.findMany({ where: { isActive: true, products: { some: { product: { status: "ACTIVE", deletedAt: null } } } }, include: { products: { where: { product: { status: "ACTIVE", deletedAt: null } }, orderBy: { position: "asc" }, take: 4, include: { product: { include: productCardInclude } } } }, orderBy: { createdAt: "asc" }, take: 3 }),
+      // "Best sellers": a collection with that name that the owner curates wins; otherwise what has really been paid for.
+      db.collection.findFirst({ where: { slug: "best-sellers", isActive: true }, select: { products: { orderBy: { position: "asc" }, take: 14, select: { productId: true } } } }),
+      db.orderItem.groupBy({ by: ["productId"], where: { order: { paymentStatus: "SUCCESS", status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] } } }, _sum: { quantity: true }, orderBy: { _sum: { quantity: "desc" } }, take: 14 }),
     ]);
-    return { store, sections, banners, deals, coupons, collections };
+    return { store, sections, banners, deals, coupons, collections, bestIds: bestCollection?.products.map((row) => row.productId) ?? [], soldIds: sales.map((row) => row.productId) };
   }),
 
   products: (filters: ProductFilters) => memo(`products:${JSON.stringify(filters)}`, async () => {

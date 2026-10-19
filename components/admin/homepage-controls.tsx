@@ -10,14 +10,16 @@ type Banner = { id: string; title: string; subtitle: string; imageUrl: string; m
 type Note = { ok: boolean; text: string } | null;
 
 const labels: Record<string, { name: string; hint: string }> = {
-  HERO: { name: "Welcome section", hint: "The headline, buttons and top deals under the slideshow." },
-  FEATURED_PRODUCTS: { name: "Top deals", hint: "Your biggest discounts, picked automatically." },
-  CATEGORIES: { name: "Offers by category", hint: "One tile per category showing its best discount." },
+  HERO: { name: "Slideshow and highlights", hint: "The offers slideshow at the very top, with the delivery, returns and warranty strip under it." },
+  FEATURED_PRODUCTS: { name: "Best sellers and deals", hint: "Best sellers (or top picks), coupons, mega deals, refurbished and the newest products." },
+  CATEGORIES: { name: "Categories", hint: "Round buttons for each category, right under the best sellers." },
   COLLECTION: { name: "Collections", hint: "Rows for the collections you created." },
-  BRANDS: { name: "Brand offers", hint: "Brand buttons with their best discount." },
-  PROMO_BANNER: { name: "Promo banner", hint: "A wide picture banner (uses your second banner below)." },
-  TRUST: { name: "Why buy from us", hint: "Warranty, returns and secure payment reassurance." },
+  BRANDS: { name: "Brands and budget", hint: "Shop-by-brand buttons and budget shortcuts." },
+  PROMO_BANNER: { name: "Promo banner", hint: "Not used any more. Offers now live in the slideshow." },
+  TRUST: { name: "Why buy from us", hint: "Reassurance, quick answers and your contact details." },
 };
+// The homepage shows its parts in this order. You can switch parts on or off, but not reorder them.
+const rank: Record<string, number> = { HERO: 0, FEATURED_PRODUCTS: 1, CATEGORIES: 2, COLLECTION: 3, BRANDS: 4, TRUST: 5 };
 
 export function HomepageControls({ sections: initialSections, banners, products, categories }: { sections: Section[]; banners: Banner[]; products: StudioProduct[]; categories: StudioCategory[] }) {
   const router = useRouter();
@@ -25,8 +27,7 @@ export function HomepageControls({ sections: initialSections, banners, products,
   const [busy, setBusy] = useState(false);
   const [sections, setSections] = useState(initialSections);
   const [mode, setMode] = useState<"none" | "make" | "upload">("none");
-  const ordered = [...sections].filter((section) => section.type !== "PROMO_BANNER").sort((a, b) => a.position - b.position);
-  const hero = ordered.find((section) => section.type === "HERO");
+  const ordered = [...sections].filter((section) => section.type !== "PROMO_BANNER").sort((a, b) => (rank[a.type] ?? 9) - (rank[b.type] ?? 9));
   const [drafts, setDrafts] = useState<Record<string, { title: string; subtitle: string }>>(() => Object.fromEntries(sections.map((section) => [section.id, { title: section.title, subtitle: section.subtitle }])));
   const changed = (section: Section) => drafts[section.id]?.title !== section.title || drafts[section.id]?.subtitle !== section.subtitle;
   const setDraft = (id: string, patch: Partial<{ title: string; subtitle: string }>) => setDrafts((current) => ({ ...current, [id]: { ...current[id], ...patch } }));
@@ -52,31 +53,18 @@ export function HomepageControls({ sections: initialSections, banners, products,
     await call("/api/admin/homepage/banners", "PATCH", { id: a.id, position: b.position === a.position ? b.position + direction : b.position }, "Order updated.");
     await call("/api/admin/homepage/banners", "PATCH", { id: b.id, position: a.position }, "Order updated.");
   }
-  async function move(index: number, direction: -1 | 1) {
-    const a = ordered[index]; const b = ordered[index + direction];
-    if (!b) return;
-    await update(a, { position: b.position }, "Order updated."); await update(b, { position: a.position }, "Order updated.");
-  }
 
   return <div className="hp">
     <div className="hp-top"><p>Change how your homepage looks. Discounts fill in on their own — set those under <a href="/admin/offers">Sales &amp; coupons</a>.</p><a className="secondary-button" href="/" target="_blank" rel="noreferrer">Preview your store ↗</a></div>
     {note && <p className={note.ok ? "studio-note ok" : "studio-note bad"} role="status">{note.text}</p>}
 
-    {hero && <section className="hp-card">
-      <h2>Welcome section</h2>
-      <label>Headline<input value={drafts[hero.id]?.title ?? ""} placeholder="Leave empty to use “Quality electronics at honest prices.”" onChange={(event) => setDraft(hero.id, { title: event.target.value })} /></label>
-      <label>Small text under it<input value={drafts[hero.id]?.subtitle ?? ""} onChange={(event) => setDraft(hero.id, { subtitle: event.target.value })} /></label>
-      <button type="button" className="primary-button" disabled={busy || !changed(hero)} onClick={() => saveText(hero)}>{changed(hero) ? "Save text" : "Saved"}</button>
-    </section>}
-
     <section className="hp-card">
       <h2>Page sections</h2>
-      <p className="step-hint">Turn a section off to hide it, or move it up and down. Nothing is deleted.</p>
+      <p className="step-hint">Turn a part of the page off to hide it. The order is fixed: slideshow, best sellers, categories, then the rest. Nothing is deleted.</p>
       <ul className="hp-list">{ordered.map((section, index) => { const label = labels[section.type] ?? { name: section.type, hint: "" };
         return <li key={section.id} className={section.isVisible ? "" : "off"}>
-          <div className="hp-move"><button type="button" disabled={busy || index === 0} onClick={() => move(index, -1)} aria-label={`Move ${label.name} up`}>↑</button><button type="button" disabled={busy || index === ordered.length - 1} onClick={() => move(index, 1)} aria-label={`Move ${label.name} down`}>↓</button></div>
           <div className="hp-info"><b>{label.name}</b><small>{label.hint}</small>
-            {section.type !== "HERO" && <details><summary>Change the heading</summary><div className="hp-edit"><input value={drafts[section.id]?.title ?? ""} placeholder="Leave empty for the default heading" onChange={(event) => setDraft(section.id, { title: event.target.value })} aria-label={`${label.name} heading`} /><button type="button" disabled={busy || !changed(section)} onClick={() => saveText(section)}>Save</button></div></details>}
+            {section.type !== "HERO" && section.type !== "TRUST" && section.type !== "COLLECTION" && <details><summary>Change the heading</summary><div className="hp-edit"><input value={drafts[section.id]?.title ?? ""} placeholder="Leave empty to keep the standard heading" onChange={(event) => setDraft(section.id, { title: event.target.value })} aria-label={`${label.name} heading`} /><button type="button" disabled={busy || !changed(section)} onClick={() => saveText(section)}>Save</button></div></details>}
           </div>
           <button type="button" role="switch" aria-checked={section.isVisible} className={section.isVisible ? "switch on" : "switch"} disabled={busy} onClick={() => update(section, { isVisible: !section.isVisible }, section.isVisible ? `${label.name} hidden.` : `${label.name} is now showing.`)}><span /><em>{section.isVisible ? "Showing" : "Hidden"}</em></button>
         </li>; })}</ul>
@@ -94,7 +82,7 @@ export function HomepageControls({ sections: initialSections, banners, products,
           <button type="button" disabled={busy} onClick={() => call("/api/admin/homepage/banners", "PATCH", { id: banner.id, isVisible: !banner.isVisible }, banner.isVisible ? "Slide hidden." : "Slide showing.")}>{banner.isVisible ? "Hide" : "Show"}</button>
           <button type="button" className="danger" disabled={busy} onClick={() => { if (confirm(`Delete “${banner.title}”?`)) void call("/api/admin/homepage/banners", "DELETE", { id: banner.id }, "Slide deleted."); }}>Delete</button>
         </div>
-      </li>)}</ul> : <p className="step-hint">No slides yet. Your homepage shows the welcome section until you add one.</p>}
+      </li>)}</ul> : <p className="step-hint">No slides yet. Your homepage shows a simple welcome banner until you add one.</p>}
       <div className="hp-add-row">
         <button type="button" className={mode === "make" ? "primary-button" : "secondary-button"} onClick={() => setMode(mode === "make" ? "none" : "make")}>✨ Create a banner</button>
         <button type="button" className={mode === "upload" ? "primary-button" : "secondary-button"} onClick={() => setMode(mode === "upload" ? "none" : "upload")}>Upload my own picture</button>

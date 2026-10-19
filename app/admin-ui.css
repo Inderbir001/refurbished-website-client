@@ -127,7 +127,7 @@
 .hp-card .primary-button { width: max-content; }
 .hp-card .primary-button:disabled { opacity: .5; }
 .hp-list, .hp-banners { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.hp-list li { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; transition: opacity .3s, background .3s; }
+.hp-list li { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; transition: opacity .3s, background .3s; }
 .hp-list li.off { opacity: .55; background: var(--paper); }
 .hp-move { display: grid; gap: 4px; }
 .hp-move button { width: 32px; height: 28px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
@@ -160,7 +160,7 @@
   .running li, .cl { grid-template-columns: 1fr auto; }
   .running li .pct-badge, .cl code { grid-column: 1 / -1; width: max-content; }
   .finetune .offer-filters.simple { grid-template-columns: 1fr; }
-  .hp-list li { grid-template-columns: auto 1fr; }
+  .hp-list li { grid-template-columns: 1fr; }
   .hp-list li .switch { grid-column: 1 / -1; width: max-content; }
   .hp-banners li { grid-template-columns: 80px 1fr; }
   .hp-banners img { width: 80px; height: 54px; }
