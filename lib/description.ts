@@ -76,7 +76,7 @@ export function highlights(blocks: DescBlock[], count = 4): string[] {
   const labelled = items.filter((item) => item.label);
   const source = labelled.length >= 2 ? labelled : items;
   return source.slice(0, count).map((item) => {
-    const spec = item.label && item.label.split(/\s+/).length <= 2 && /\d/.test(item.text);
+    const spec = item.label && item.label.split(/\s+/).length <= 2 && /^[\d"~(]/.test(item.text);
     const text = item.label ? (spec ? `${item.label}: ${item.text}` : item.label) : item.text;
     const clean = text.replace(/[.;,]+$/, "");
     return clean.length > 64 ? `${clean.slice(0, 61).trimEnd()}…` : clean;
