@@ -8,8 +8,6 @@ html { scroll-behavior: smooth; }
   .btn-solid::after, .panel-btn::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .38) 50%, transparent 70%); transform: translateX(-130%); transition: transform .8s cubic-bezier(.22, 1, .36, 1); pointer-events: none; }
   .btn-solid:hover::after, .panel-btn:hover::after { transform: translateX(130%); }
 
-  /* banners breathe: a slow settle-in zoom on the visible slide */
-  .slide.on img { animation: kenburns 9s ease-out both; }
 
   /* soft glows inside the coloured panels drift slowly */
   .panel::before { animation: drift 16s ease-in-out infinite alternate; }

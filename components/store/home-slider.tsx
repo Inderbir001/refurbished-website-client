@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { thumbUrl } from "@/lib/image-url";
+import { heroUrl } from "@/lib/image-url";
 
 export type Slide = { id: string; title: string; href: string | null; image: string; mobile: string | null };
 
@@ -31,7 +31,7 @@ export function HomeSlider({ slides, interval = 5500 }: { slides: Slide[]; inter
     onTouchEnd={(event) => { const start = touch.current; touch.current = null; setPaused(false); if (start == null) return; const delta = event.changedTouches[0].clientX - start; if (Math.abs(delta) > 40) go(index + (delta < 0 ? 1 : -1)); }}>
     <div className="slider-track">
       {slides.map((slide, position) => {
-        const picture = seen.includes(position) ? <picture>{slide.mobile && <source media="(max-width: 700px)" srcSet={thumbUrl(slide.mobile, 900)} />}<img src={thumbUrl(slide.image, 1600)} alt={slide.title} loading={position === 0 ? "eager" : "lazy"} fetchPriority={position === 0 ? "high" : undefined} decoding="async" draggable={false} onError={(event) => { const el = event.currentTarget; if (el.dataset.fb) return; el.dataset.fb = "1"; el.parentElement?.querySelectorAll("source").forEach((source) => source.remove()); el.src = window.matchMedia("(max-width: 700px)").matches && slide.mobile ? slide.mobile : slide.image; }} /></picture> : <span className="slide-empty" aria-hidden="true" />;
+        const picture = seen.includes(position) ? <picture>{slide.mobile && <source media="(max-width: 700px)" srcSet={heroUrl(slide.mobile)} />}<img src={heroUrl(slide.image)} alt={slide.title} loading={position === 0 ? "eager" : "lazy"} fetchPriority={position === 0 ? "high" : undefined} decoding="async" draggable={false} onError={(event) => { const el = event.currentTarget; if (el.dataset.fb) return; el.dataset.fb = "1"; el.parentElement?.querySelectorAll("source").forEach((source) => source.remove()); el.src = window.matchMedia("(max-width: 700px)").matches && slide.mobile ? slide.mobile : slide.image; }} /></picture> : <span className="slide-empty" aria-hidden="true" />;
         return <div key={slide.id} className={position === index ? "slide on" : "slide"} role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${count}`} aria-hidden={position !== index}>
           {slide.href ? <Link href={slide.href} tabIndex={position === index ? 0 : -1}>{picture}</Link> : picture}
         </div>;

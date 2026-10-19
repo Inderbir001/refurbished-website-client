@@ -24,3 +24,21 @@ export function thumbUrl(url: string | null | undefined, size: ThumbSize = 480):
   if (path.startsWith("_t/") || path.startsWith("videos/")) return url;
   return `${url.slice(0, at + MARK.length)}${BUCKET}/${thumbKey(path, size)}`;
 }
+
+// Banners are shown large, so they get their own higher-quality copy (WebP at 92%, up to 1600px wide) under _t/hero/.
+export function heroKey(path: string) {
+  const clean = path.split("?")[0];
+  const dot = clean.lastIndexOf(".");
+  const base = dot > clean.lastIndexOf("/") ? clean.slice(0, dot) : clean;
+  return `_t/hero/${base}.webp`;
+}
+export function heroUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  const at = url.indexOf(MARK);
+  if (at < 0) return url;
+  const rest = url.slice(at + MARK.length);
+  if (!rest.startsWith(`${BUCKET}/`)) return url;
+  const path = rest.slice(BUCKET.length + 1);
+  if (path.startsWith("_t/") || path.startsWith("videos/")) return url;
+  return `${url.slice(0, at + MARK.length)}${BUCKET}/${heroKey(path)}`;
+}
