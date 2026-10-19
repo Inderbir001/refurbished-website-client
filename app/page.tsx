@@ -156,7 +156,7 @@ export default async function Home() {
     </>}
 
     {shown(HomepageSectionType.BRANDS) && brandList.length > 0 && <section className="brand-marquee" aria-label="Brands we stock" style={{ "--dur": `${Math.max(28, brandList.length * 3)}s` } as React.CSSProperties}>
-      <div className="bm-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1 ? true : undefined}>{brandList.map((brand) => <li key={brand.slug}><Link href={`/products?brand=${brand.slug}`} tabIndex={copy === 1 ? -1 : undefined} title={brand.name}>{brand.logo ? <img src={brand.logo} alt={copy === 1 ? "" : brand.name} loading="lazy" /> : <span>{brand.name}</span>}</Link></li>)}</ul>)}</div>
+      <div className="bm-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1 ? true : undefined}>{brandList.map((brand) => <li key={brand.slug}><Link href={`/products?brand=${brand.slug}`} tabIndex={copy === 1 ? -1 : undefined} title={brand.name}>{brand.logo ? <Pic src={brand.logo} size={480} alt={copy === 1 ? "" : brand.name} /> : <span>{brand.name}</span>}</Link></li>)}</ul>)}</div>
     </section>}
 
     {shown(HomepageSectionType.FEATURED_PRODUCTS) && firstRow.length > 0 && <section className="home-section">
@@ -208,7 +208,7 @@ export default async function Home() {
     </section>)}
 
     {shown(HomepageSectionType.BRANDS) && <>
-      {brandList.length > 0 && <section className="home-section"><Head title={titleOf(HomepageSectionType.BRANDS, "Shop by brand")} note="Pick a brand you trust." href="/products" cta="All products" /><ScrollRow className="brow">{brandList.map((brand) => <Link className="btile" key={brand.slug} href={`/products?brand=${brand.slug}`}><span className="btile-logo">{brand.logo ? <img src={brand.logo} alt={brand.name} loading="lazy" /> : <b>{brand.name}</b>}</span>{brand.logo && <b>{brand.name}</b>}<small>{brand.count} {brand.count === 1 ? "product" : "products"}</small></Link>)}</ScrollRow></section>}
+      {brandList.length > 0 && <section className="home-section"><Head title={titleOf(HomepageSectionType.BRANDS, "Shop by brand")} note="Pick a brand you trust." href="/products" cta="All products" /><ScrollRow className="brow">{brandList.map((brand) => <Link className="btile" key={brand.slug} href={`/products?brand=${brand.slug}`}><span className="btile-logo">{brand.logo ? <Pic src={brand.logo} size={480} alt={brand.name} /> : <b>{brand.name}</b>}</span>{brand.logo && <b>{brand.name}</b>}<small>{brand.count} {brand.count === 1 ? "product" : "products"}</small></Link>)}</ScrollRow></section>}
       {budgetTiles.length > 0 && <section className="home-section"><Head title="Shop by budget" /><div className="budget-chips">{budgetTiles.map((tile, index) => <Link key={tile.limit} href={`/products?max=${tile.limit}&sort=price-asc`} style={{ "--tint": tints[index % tints.length] } as React.CSSProperties}><small>Under</small><b>{inr(tile.limit * 100)}</b><span>{tile.count} products <Icon name="arrow" size={13} /></span></Link>)}</div></section>}
     </>}
 

@@ -1,7 +1,7 @@
 // Small, cached copies of every stored photo.
-// Each photo in the "product-images" storage is also saved as a 480px and a 900px WebP under _t/<size>/ (made when the photo is
+// Each photo in the "product-images" storage is also saved as a 480px and a 900px WebP (plus 1600px for wide banners) under _t/<size>/ (made when the photo is
 // uploaded, and for older photos by a one-off script). Pages ask for the small copy, which is a fraction of the size of the original.
-export type ThumbSize = 480 | 900;
+export type ThumbSize = 480 | 900 | 1600;
 const MARK = "/storage/v1/object/public/";
 const BUCKET = "product-images";
 
@@ -21,6 +21,6 @@ export function thumbUrl(url: string | null | undefined, size: ThumbSize = 480):
   const rest = url.slice(at + MARK.length);
   if (!rest.startsWith(`${BUCKET}/`)) return url;
   const path = rest.slice(BUCKET.length + 1);
-  if (path.startsWith("_t/") || path.startsWith("brand-logos/") || path.startsWith("videos/")) return url;
+  if (path.startsWith("_t/") || path.startsWith("videos/")) return url;
   return `${url.slice(0, at + MARK.length)}${BUCKET}/${thumbKey(path, size)}`;
 }
