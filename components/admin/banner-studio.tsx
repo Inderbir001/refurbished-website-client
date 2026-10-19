@@ -33,7 +33,7 @@ function pill(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h:
 
 // Draws one banner. `mobile` stacks the text above the photo; desktop puts them side by side.
 function draw(canvas: HTMLCanvasElement, family: string, opts: Opts, photo: HTMLImageElement | null, mobile: boolean) {
-  const w = mobile ? 900 : 1600; const h = mobile ? 750 : 640;
+  const w = mobile ? 900 : 1800; const h = mobile ? 750 : 630; // the computer banner matches the slideshow shape (20:7) and stays sharp on big, high-density screens
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext("2d")!; const t = opts.theme;
   const grad = ctx.createLinearGradient(0, 0, w, h); grad.addColorStop(0, t.bg[0]); grad.addColorStop(1, t.bg[1]);

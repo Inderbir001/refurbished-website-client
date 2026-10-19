@@ -72,7 +72,7 @@ export function HomepageControls({ sections: initialSections, banners, products,
 
     <section className="hp-card">
       <h2>Offers slideshow</h2>
-      <p className="step-hint">These pictures slide across the top of your homepage and open the page you choose. Make one in a minute, or upload a poster you designed (best size 1600 × 640).</p>
+      <p className="step-hint">These pictures slide across the top of your homepage and open the page you choose. Make one in a minute, or upload a poster you designed (best size 1800 × 630).</p>
       {banners.length ? <ul className="hp-banners">{banners.map((banner, index) => <li key={banner.id} className={banner.isVisible ? "" : "off"}>
         <img src={banner.imageUrl} alt="" />
         <div><b>{banner.title}</b><small>Slide {index + 1}{banner.mobileImageUrl ? " · has a phone version" : ""}{banner.linkUrl ? ` · opens ${banner.linkUrl}` : ""}{banner.isVisible ? "" : " · hidden"}</small></div>
@@ -90,7 +90,7 @@ export function HomepageControls({ sections: initialSections, banners, products,
       {mode === "make" && <BannerStudio products={products} categories={categories} busy={busy} onCreate={async (slide: NewSlide) => { const added = await call("/api/admin/homepage", "POST", { title: slide.title, imageUrl: slide.imageUrl, mobileImageUrl: slide.mobileImageUrl, linkUrl: slide.linkUrl, position: banners.length, isVisible: true }, "Added to the slideshow."); if (added) setMode("none"); return Boolean(added); }} />}
       {mode === "upload" && <form className="hp-upload" onSubmit={async (event) => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const added = await call("/api/admin/homepage", "POST", { title: data.get("title"), imageUrl: data.get("imageUrl"), mobileImageUrl: data.get("mobileImageUrl") || undefined, linkUrl: data.get("linkUrl") || undefined, position: banners.length, isVisible: true }, "Added to the slideshow."); if (added) { form.reset(); setMode("none"); } }}>
         <label>Name (only you see this)<input name="title" required minLength={2} placeholder="Diwali sale" /></label>
-        <ImageField name="imageUrl" label="Picture for computers" required hint="Wide poster, best at 1600 × 640 pixels. Put your text inside the picture." />
+        <ImageField name="imageUrl" label="Picture for computers" required hint="Wide poster, best at 1800 × 630 pixels. Put your text inside the picture." />
         <ImageField name="mobileImageUrl" label="Picture for phones (optional)" hint="Best at 900 × 750 pixels. If you skip it, the computer picture is used." />
         <label>Opens which page (optional)<input name="linkUrl" placeholder="/products" /></label>
         <button className="primary-button" disabled={busy}>Add to the slideshow</button>

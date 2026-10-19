@@ -112,3 +112,8 @@ a, button, summary, [role="button"], label { -webkit-tap-highlight-color: rgba(2
 .cart-skeleton span:last-child { height: 200px; }
 @keyframes skeletonShift { to { background-position: -220% 0; } }
 @media (max-width: 700px) { .cart-stage { min-height: max(560px, 92vh); } }
+
+/* ===== "there is more below" shadow along the bottom of the screen ===== */
+.scroll-hint { position: fixed; left: 0; right: 0; bottom: 0; height: 84px; z-index: 60; pointer-events: none; opacity: 0; transition: opacity .4s ease; background: linear-gradient(to top, rgba(20, 33, 31, .22), rgba(20, 33, 31, .08) 45%, rgba(20, 33, 31, 0)); }
+.scroll-hint.on { opacity: 1; }
+@media print { .scroll-hint { display: none; } }
