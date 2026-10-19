@@ -10,10 +10,14 @@ describe("small photo copies", () => {
   });
   it("leaves everything else alone", () => {
     expect(thumbUrl("https://images.unsplash.com/photo-1.jpg")).toBe("https://images.unsplash.com/photo-1.jpg");
-    expect(thumbUrl(`${BASE}/brand-logos/boat.png`)).toBe(`${BASE}/brand-logos/boat.png`);
+    expect(thumbUrl(`${BASE}/videos/clip.mp4`)).toBe(`${BASE}/videos/clip.mp4`);
     expect(thumbUrl(`${BASE}/_t/480/store1/x.webp`)).toBe(`${BASE}/_t/480/store1/x.webp`);
     expect(thumbUrl("")).toBe("");
     expect(thumbUrl(null)).toBe("");
+  });
+  it("also serves brand logos from their small copies", () => {
+    expect(thumbUrl(`${BASE}/brand-logos/boat.png`, 480)).toBe(`${BASE}/_t/480/brand-logos/boat.webp`);
+    expect(thumbUrl(`${BASE}/store1/banner.png`, 1600)).toBe(`${BASE}/_t/1600/store1/banner.webp`);
   });
   it("uses the same key when making and when asking", () => {
     expect(thumbKey("store1/file.name.png", 480)).toBe("_t/480/store1/file.name.webp");
