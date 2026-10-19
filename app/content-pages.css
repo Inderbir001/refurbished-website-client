@@ -367,3 +367,16 @@ small.hint, .hint { display: block; color: var(--muted); font-weight: 400; font-
   .desc-p { font-size: 14px; }
   .desc-list li { font-size: 13.5px; }
 }
+
+/* ===== footer on phones: columns may shrink, long links wrap instead of pushing the page wider ===== */
+.footer-grid > * { min-width: 0; }
+@media (max-width: 900px) {
+  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .footer-col a { width: auto; max-width: 100%; overflow-wrap: anywhere; }
+  .footer-col a:hover { transform: none; }
+}
+@media (max-width: 600px) {
+  .footer-grid > .footer-col:last-child { grid-column: 1 / -1; }
+  .footer-brand p { max-width: none; }
+  .footer-bottom { flex-direction: column; gap: 6px; }
+}
