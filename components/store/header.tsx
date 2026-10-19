@@ -42,3 +42,21 @@ export async function Header() {
     </header>
   </>;
 }
+
+// Shown for a moment while the header's own data (who is signed in, the cart count, the menu) arrives, so the rest of the page never waits for it.
+export function HeaderFallback() {
+  return <>
+    <div className="announcement" aria-hidden="true" style={{ minHeight: 34 }} />
+    <header className="site-header">
+      <div className="sh-main">
+        <Link href="/" className="wordmark sh-logo"><Wordmark /></Link>
+        <div className="sh-search"><div className="search-box header-search" /></div>
+        <div className="sh-actions">
+          <Link href="/" className="sh-action"><svg {...icon}><path d="M4 11 12 4l8 7" /><path d="M6 10v10h12V10" /><path d="M10 20v-5h4v5" /></svg><span>Home</span></Link>
+          <Link href="/cart" className="sh-action"><span className="sh-cart-icon"><svg {...icon}><path d="M3 4h2l2.4 11h10.4L20 8H6.2" /><circle cx="9" cy="19.5" r="1.3" /><circle cx="17" cy="19.5" r="1.3" /></svg></span><span>Cart</span></Link>
+        </div>
+      </div>
+      <div className="sh-cats" role="presentation" style={{ minHeight: 46 }} />
+    </header>
+  </>;
+}

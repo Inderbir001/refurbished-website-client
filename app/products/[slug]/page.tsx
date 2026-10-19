@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const token = (await cookies()).get("session")?.value;
-  const { product } = await pageData("product", { slug: (await params).slug, token });
+  const { product } = await pageData("product", { slug: (await params).slug });
   if (!product) return { title: "Product not found" };
   return {
     title: product.seoTitle ?? product.name,
@@ -26,8 +26,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const token = (await cookies()).get("session")?.value;
-  const { product, canReview, policy, sold = 0 } = await pageData("product", { slug: (await params).slug, token });
+  const { product, policy, sold = 0 } = await pageData("product", { slug: (await params).slug });
   if (!product) notFound();
+  const canReview = token ? await pageData("canReview", { productId: product.id, token }).then((result) => result.canReview).catch(() => false) : false;
   // Reviews are for buyers only: the form appears just for a signed-in customer with a delivered, paid order for this product (decided by the same one request).
   const price = priceFor(product.variants[0] ?? { price: null, salePrice: null }, product);
   const structuredData = {

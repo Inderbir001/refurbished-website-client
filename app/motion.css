@@ -55,3 +55,15 @@ html { scroll-behavior: smooth; }
 @keyframes badgeIn { from { opacity: 0; transform: scale(.4) rotate(-12deg); } to { opacity: 1; transform: none; } }
 @keyframes fadeDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @keyframes dotfill { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* Sections, rows and cards rise into view as you scroll. Pure CSS (no script touching the page), run by the browser's own scroll timeline;
+   browsers without it, and people who ask for less motion, simply see everything straight away. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .home-head, .panel, .why2-head, .help2, .detail-bottom, .brand-marquee,
+    .srow-track > *, .contact-cards > *, .tiles > *, .why2-cards > *, .coupon-strip > *, .brand-chips > *, .budget-chips > *, .faq > *, .acc-group > *, .product-grid > * {
+      animation: revealRise linear backwards; animation-timeline: view(); animation-range: entry 0% entry 38%;
+    }
+  }
+}
+@keyframes revealRise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }

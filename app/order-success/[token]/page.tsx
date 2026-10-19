@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pic } from "@/components/store/pic";
 import { notFound } from "next/navigation";
 import { PrintButton } from "@/components/store/print-button";
 import { currentSession } from "@/lib/auth";
@@ -67,7 +68,7 @@ export default async function OrderSuccess({ params }: { params: Promise<{ token
             const image = product?.images[0]?.url;
             const title = item.variantId ? variantTitle.get(item.variantId) : undefined;
             return <li key={item.id}>
-              <div className="receipt-thumb">{image ? <img src={image} alt="" /> : <span>No image</span>}</div>
+              <div className="receipt-thumb">{image ? <Pic src={image} size={480} /> : <span>No image</span>}</div>
               <div className="receipt-info">{product ? <Link href={`/products/${product.slug}`}>{item.name}</Link> : <b>{item.name}</b>}{title && <small>{title}</small>}<small>SKU {item.sku}</small></div>
               <div className="receipt-qty">{item.quantity} × {inr(item.unitPrice)}</div>
               <b className="receipt-line">{inr(item.unitPrice * item.quantity)}</b>

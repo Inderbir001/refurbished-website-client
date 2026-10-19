@@ -277,3 +277,16 @@
 .tiles.n4 .tile:nth-child(1) .tile-img, .tiles.n3 .tile:nth-child(1) .tile-img { width: min(50%, 440px); right: 2%; bottom: -3%; }
 @media (max-width: 1000px) { .tiles .tile:nth-child(1) .tile-img { width: 44%; } }
 @media (max-width: 600px) { .tiles .tile:nth-child(1) .tile-img { width: 42%; right: 2%; } }
+
+/* smartphones panel and tile */
+.panel-sky { background: linear-gradient(120deg, #e8f2ff 0%, #cfe3fb 55%, #b6d3f6 100%); color: var(--ink); }
+.panel-sky::before { background: radial-gradient(circle, rgba(255, 255, 255, .75), rgba(255, 255, 255, 0) 70%); }
+.panel-sky::after { background: radial-gradient(circle, rgba(60, 120, 230, .25), rgba(60, 120, 230, 0) 70%); }
+.panel-sky .panel-tag { background: #fff; color: #1d4ed8; }
+.panel-sky .panel-head p { color: #3b5478; }
+.panel-sky .panel-btn { background: var(--ink); color: #fff; }
+.panel-sky .panel-btn:hover { background: var(--orange); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.chip-row a { padding: 7px 14px; border-radius: 999px; background: rgba(255, 255, 255, .75); border: 1px solid rgba(255, 255, 255, .95); font-weight: 700; font-size: 13px; color: #1e3a5f; transition: background .2s, transform .2s; }
+.chip-row a:hover { background: #fff; transform: translateY(-2px); }
+.t-phone { background: linear-gradient(135deg, #dbe8ff, #b9cffa); color: var(--ink); }

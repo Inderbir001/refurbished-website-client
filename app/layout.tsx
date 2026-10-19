@@ -17,7 +17,10 @@ import "./storefront-pro.css";
 import "./auth.css";
 import "./motion.css";
 import "./product-buy.css";
-import { Header } from "@/components/store/header";
+import "./lite.css";
+import { Suspense } from "react";
+import { Header, HeaderFallback } from "@/components/store/header";
+import { NavProgress } from "@/components/store/nav-progress";
 import { brand } from "@/lib/brand";
 import { Footer } from "@/components/store/footer";
 import { ScrollReveal } from "@/components/store/scroll-reveal";
@@ -32,5 +35,5 @@ export const metadata: Metadata = { title: { default: `${brand.name} | ${brand.t
 // The admin panel has its own top bar: do not even load the store header and footer for it.
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const inAdmin = ((await headers()).get("x-app-path") ?? "").startsWith("/admin");
-  return <html lang="en" className={`${body.variable} ${head.variable}`}><body><div className="scroll-progress" aria-hidden="true" /><ScrollReveal /><StoreChrome header={inAdmin ? null : <Header />} footer={inAdmin ? null : <><Footer /><CookieBanner /></>}>{children}</StoreChrome></body></html>;
+  return <html lang="en" className={`${body.variable} ${head.variable}`}><body><div className="scroll-progress" aria-hidden="true" /><ScrollReveal /><Suspense fallback={null}><NavProgress /></Suspense><StoreChrome header={inAdmin ? null : <Suspense fallback={<HeaderFallback />}><Header /></Suspense>} footer={inAdmin ? null : <><Footer /><CookieBanner /></>}>{children}</StoreChrome></body></html>;
 }

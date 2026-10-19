@@ -1,0 +1,30 @@
+/* ===== Responsiveness: instant feedback on taps, and lighter effects on phones ===== */
+
+/* the bar that runs across the top while the next page loads */
+.nav-progress { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 300; pointer-events: none; opacity: 0; transition: opacity .28s ease; }
+.nav-progress span { display: block; height: 100%; width: 0; border-radius: 0 4px 4px 0; background: linear-gradient(90deg, #ff9a70, #fb5a2e); box-shadow: 0 0 10px rgba(251, 107, 72, .7); }
+.nav-progress.loading { opacity: 1; }
+.nav-progress.loading span { width: 84%; transition: width 9s cubic-bezier(.08, .8, .2, 1); }
+.nav-progress.done { opacity: 1; }
+.nav-progress.done span { width: 100%; transition: width .18s ease-out; }
+.nav-progress.idle span { transition: none; }
+
+/* every tap answers at once: a soft highlight and a little press */
+a, button, summary, [role="button"], label { -webkit-tap-highlight-color: rgba(251, 107, 72, .16); touch-action: manipulation; }
+.product-card:active { transform: scale(.985); }
+.cbub:active .cbub-img, .tile:active, .btile:active, .see-all:active, .panel-btn:active, .acc > summary:active, .faq summary:active { transform: scale(.97); }
+.product-card, .tile, .cbub-img, .btile { transition-property: transform, box-shadow, border-color; }
+
+/* phones and touch screens: no blending, blurring or endless animation (they cost battery and make taps feel slow) */
+@media (max-width: 900px), (hover: none) {
+  .product-card .product-image img, .home .product-card .product-image img { mix-blend-mode: normal; }
+  .product-card .product-image, .home .product-card .product-image { background: #fff; }
+  .site-header { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .buybar { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .slide.on img, .panel::before, .panel::after, .help2::before, .buy-btn.solid, .discount-badge, .urgency.hot i { animation: none; }
+  .brand-marquee { -webkit-mask-image: none; mask-image: none; }
+  .bm-track a { background: #fff; border: 1px solid #efe5dc; }
+  .bm-track img, .btile-logo img { mix-blend-mode: normal; }
+  .btile-logo { background: #fff; }
+  .product-card:hover { transform: none; box-shadow: none; }
+}

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { db } from "./db";
 import { verifySessionLocally } from "./auth";
@@ -73,6 +74,13 @@ export const pageLoaders = {
     const sold = product ? memo(`product-sold:${product.id}`, async () => (await db.orderItem.aggregate({ where: { productId: product.id, order: { paymentStatus: "SUCCESS", status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] } } }, _sum: { quantity: true } }))._sum.quantity ?? 0) : Promise.resolve(0);
     return { product, canReview, policy, sold: await sold };
   },
+
+  // Asked separately (and only for signed-in visitors) so the product page itself can be shared by everyone.
+  async canReview(args: { productId: string; token?: string }) {
+    const session = args.token ? await verifySessionLocally(args.token) : null;
+    const allowed = session ? Boolean(await db.orderItem.findFirst({ where: { productId: args.productId, order: { userId: session.sub, status: "DELIVERED", paymentStatus: "SUCCESS" } }, select: { id: true } })) : false;
+    return { canReview: allowed };
+  },
 };
 
 export type PageName = keyof typeof pageLoaders;
@@ -86,16 +94,27 @@ export function runPage(name: string, args: unknown) {
   return loader(args ?? {});
 }
 
-// The same page asked twice in one render (e.g. metadata and the page itself) makes one request.
-const fetchPage = cache(async (name: string, argsJson: string): Promise<unknown> => {
-  const args = JSON.parse(argsJson);
-  if (!isFrontendOnly()) return runPage(name, args);
+// Asks the backend for one page's data.
+async function remote(name: string, args: unknown): Promise<unknown> {
   const response = await backendFetch("/api/internal/page", { body: encode({ name, args }) });
   // The backend has not been updated yet (a deploy is in progress): do it the old way, query by query, so pages keep working.
   if (response.status === 404) return runPage(name, args);
   const payload = decode<{ result?: unknown; error?: { message?: string } }>(await response.text());
   if (!response.ok || payload.error) throw new Error(payload.error?.message ?? `Page data request failed (${response.status}).`);
   return payload.result;
+}
+
+// Public pages (the same for everybody) are remembered at the website's edge for 30 seconds, so most visits never wait for the backend.
+// The data is stored as text so dates survive the trip. Anything personal (header, cart, orders, a signed-in visitor's data) is never cached.
+const PUBLIC_PAGES = new Set(["home", "products", "category", "product"]);
+const sharedRemote = unstable_cache(async (name: string, argsJson: string) => encode(await remote(name, JSON.parse(argsJson))), ["public-page-data-v1"], { revalidate: 30 });
+
+// The same page asked twice in one render (e.g. metadata and the page itself) makes one request.
+const fetchPage = cache(async (name: string, argsJson: string): Promise<unknown> => {
+  const args = JSON.parse(argsJson);
+  if (!isFrontendOnly()) return runPage(name, args);
+  if (PUBLIC_PAGES.has(name) && !(args && args.token)) return decode(await sharedRemote(name, argsJson));
+  return remote(name, args);
 });
 
 export function pageData<K extends PageName>(name: K, args?: LoaderArgs<K>): Promise<LoaderResult<K>> {

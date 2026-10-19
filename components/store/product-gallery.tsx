@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { parseVideo } from "@/lib/video";
+import { Pic } from "@/components/store/pic";
 
 type Photo = { id: string; url: string; alt: string | null };
 type Item = { key: string; kind: "photo"; url: string; alt: string | null } | { key: string; kind: "video"; url: string };
@@ -23,7 +24,7 @@ export function ProductGallery({ images, videos = [], name }: { images: Photo[];
 
   return <div className="gallery" onKeyDown={(event) => { if (event.key === "ArrowLeft") go(-1); if (event.key === "ArrowRight") go(1); }}>
     <div className={current.kind === "video" ? "main-image is-video" : "main-image"} onMouseMove={current.kind === "photo" ? track : undefined}>
-      {current.kind === "photo" && <img src={current.url} alt={current.alt ?? name} />}
+      {current.kind === "photo" && <Pic key={current.key} src={current.url} size={900} alt={current.alt ?? name} priority={index === 0} loading="eager" />}
       {info?.kind === "file" && <video key={current.key} src={info.url} controls playsInline preload="metadata" aria-label={`Video of ${name}`} />}
       {(info?.kind === "youtube" || info?.kind === "vimeo") && <iframe key={current.key} src={info.embed} title={`Video of ${name}`} allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen loading="lazy" referrerPolicy="strict-origin-when-cross-origin" />}
       {items.length > 1 && <>
@@ -36,7 +37,7 @@ export function ProductGallery({ images, videos = [], name }: { images: Photo[];
       {items.map((item, position) => {
         const video = item.kind === "video" ? parseVideo(item.url) : null;
         return <button key={item.key} type="button" className={`${position === index ? "on" : ""}${item.kind === "video" ? " vid" : ""}`.trim()} aria-label={item.kind === "video" ? `Play video ${position + 1 - images.length}` : `Show photo ${position + 1} of ${images.length}`} aria-current={position === index} onClick={() => setIndex(position)}>
-          {item.kind === "photo" ? <img src={item.url} alt="" loading="lazy" /> : video?.kind === "youtube" ? <img src={video.thumb} alt="" loading="lazy" /> : video?.kind === "file" ? <video src={`${video.url}#t=0.5`} preload="metadata" muted playsInline /> : <span className="vid-blank" />}
+          {item.kind === "photo" ? <Pic src={item.url} size={480} alt="" /> : video?.kind === "youtube" ? <img src={video.thumb} alt="" loading="lazy" /> : video?.kind === "file" ? <video src={`${video.url}#t=0.5`} preload="metadata" muted playsInline /> : <span className="vid-blank" />}
           {item.kind === "video" && <i aria-hidden>▶</i>}
         </button>;
       })}

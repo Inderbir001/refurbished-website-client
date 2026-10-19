@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Pic } from "@/components/store/pic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { brand } from "@/lib/brand";
@@ -157,7 +158,7 @@ export function CheckoutForm({ addresses, gateways }: { addresses: Address[]; ga
       <aside className="co-summary">
         <h2>Order summary</h2>
         {!cart ? <p className="co-hint">Loading your order…</p> : <>
-          <ul className="co-items">{items.map((item) => <li key={item.id}><div className="co-thumb">{item.product.images[0] ? <img src={item.product.images[0].url} alt="" /> : null}<em>{item.quantity}</em></div><div><b>{item.product.name}</b>{item.variant?.title && item.variant.title !== "Standard" && <small>{item.variant.title}</small>}</div></li>)}</ul>
+          <ul className="co-items">{items.map((item) => <li key={item.id}><div className="co-thumb">{item.product.images[0] ? <Pic src={item.product.images[0].url} size={480} /> : null}<em>{item.quantity}</em></div><div><b>{item.product.name}</b>{item.variant?.title && item.variant.title !== "Standard" && <small>{item.variant.title}</small>}</div></li>)}</ul>
           <div className="co-coupon">
             {totals!.couponCode && !totals!.couponError
               ? <p className="co-coupon-on"><span>🏷 <b>{totals!.couponCode}</b> applied</span><button type="button" className="link-button" disabled={couponBusy} onClick={removeCoupon}>Remove</button></p>

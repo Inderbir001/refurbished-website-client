@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pic } from "@/components/store/pic";
 import { HomepageSectionType } from "@prisma/client";
 import { CopyCode } from "@/components/store/copy-code";
 import { Icon } from "@/components/store/icons";
@@ -51,8 +52,8 @@ function Head({ title, note, href, cta = "See all", icon }: { title: string; not
   </div>;
 }
 
-function Row({ products }: { products: Product[] }) {
-  return <ScrollRow className="prow">{products.map((product) => <div className="prow-item" key={product.id}><ProductCard product={product} /></div>)}</ScrollRow>;
+function Row({ products, eager = false }: { products: Product[]; eager?: boolean }) {
+  return <ScrollRow className="prow">{products.map((product, index) => <div className="prow-item" key={product.id}><ProductCard product={product} eager={eager && index < 3} /></div>)}</ScrollRow>;
 }
 
 export default async function Home() {
@@ -104,7 +105,15 @@ export default async function Home() {
       row.count += 1; brandStats.set(product.brand.id, row);
     }
   }
-  const categories = [...categoryStats.values()].sort((a, b) => b.count - a.count);
+  // Phones are the big-ticket items, so their category always comes first.
+  const isPhoneName = (name: string) => /^(mobile phones?|smartphones?|phones?)$/i.test(name.trim());
+  const categories = [...categoryStats.values()].sort((a, b) => Number(isPhoneName(b.name)) - Number(isPhoneName(a.name)) || b.count - a.count);
+  const otherCategories = categories.filter((category) => !isPhoneName(category.name));
+  const phoneCategory = categories.find((category) => isPhoneName(category.name));
+  const phoneEntries = real.filter((entry) => entry.product.category && isPhoneName(entry.product.category.name));
+  const phones = phoneEntries.map((entry) => entry.product).slice(0, 12);
+  const phoneFrom = phoneEntries.length ? Math.min(...phoneEntries.map((entry) => entry.price)) : 0;
+  const phoneBrands = [...new Map(phoneEntries.filter((entry) => entry.product.brand).map((entry) => [entry.product.brand!.slug, entry.product.brand!.name] as const)).entries()].slice(0, 8);
   const brandList = [...brandStats.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   const budgetTiles = budgets.map((limit) => ({ limit, count: real.filter((entry) => entry.price <= limit * 100).length })).filter((tile) => tile.count > 0);
 
@@ -114,11 +123,12 @@ export default async function Home() {
   const topBrand = brandList[0];
   const brandPhoto = topBrand ? photo(real.find((entry) => entry.product.brand?.slug === topBrand.slug && entry.product.images[0])?.product) : null;
   const tiles = [
+    phones.length && phoneCategory ? { key: "phones", className: "t-phone", tag: "Smartphones", title: `Phones from ${inr(phoneFrom)}`, note: `${phoneEntries.length} models in stock`, href: `/category/${phoneCategory.slug}`, image: photo(phones[0]) } : null,
     budgetTile ? { key: "budget", className: "t-budget", tag: "Shop by budget", title: `Under ${inr(budgetTile.limit * 100)}`, note: `${budgetTile.count} products`, href: `/products?max=${budgetTile.limit}&sort=price-asc`, image: budgetPhoto } : null,
-    categories[0] ? { key: "cat", className: "t-cat", tag: "Popular", title: categories[0].name, note: `From ${inr(categories[0].from)}`, href: `/category/${categories[0].slug}`, image: categories[0].image } : null,
-    categories[1] ? { key: "cat2", className: "t-cat2", tag: "Trending", title: categories[1].name, note: `From ${inr(categories[1].from)}`, href: `/category/${categories[1].slug}`, image: categories[1].image } : null,
+    otherCategories[0] ? { key: "cat", className: "t-cat", tag: "Popular", title: otherCategories[0].name, note: `From ${inr(otherCategories[0].from)}`, href: `/category/${otherCategories[0].slug}`, image: otherCategories[0].image } : null,
+    otherCategories[1] ? { key: "cat2", className: "t-cat2", tag: "Trending", title: otherCategories[1].name, note: `From ${inr(otherCategories[1].from)}`, href: `/category/${otherCategories[1].slug}`, image: otherCategories[1].image } : null,
     topBrand ? { key: "brand", className: "t-brand", tag: "Top brand", title: topBrand.name, note: `${topBrand.count} products`, href: `/products?brand=${topBrand.slug}`, image: brandPhoto } : null,
-  ].filter((tile): tile is NonNullable<typeof tile> => Boolean(tile));
+  ].filter((tile): tile is NonNullable<typeof tile> => Boolean(tile)).slice(0, 4);
 
   const slides = banners.filter((banner) => banner.imageUrl).map((banner) => ({ id: banner.id, title: banner.title, href: banner.linkUrl, image: banner.imageUrl, mobile: banner.mobileImageUrl }));
   // A collection with only one or two products looks empty on the homepage, so it appears once it has at least three.
@@ -151,18 +161,25 @@ export default async function Home() {
 
     {shown(HomepageSectionType.FEATURED_PRODUCTS) && firstRow.length > 0 && <section className="home-section">
       <Head icon={bestSellers.length ? "flame" : "sparkle"} title={bestSellers.length ? titleOf(HomepageSectionType.FEATURED_PRODUCTS, "Best sellers") : "Top picks"} note={bestSellers.length ? "What our customers are buying most." : "Our favourite finds in stock right now."} href="/products?sort=popular" cta="View all" />
-      <Row products={firstRow} />
+      <Row products={firstRow} eager />
     </section>}
 
     {shown(HomepageSectionType.CATEGORIES) && categories.length > 0 && <section className="home-section">
       <Head title={titleOf(HomepageSectionType.CATEGORIES, "Shop by category")} note="Find what you need, fast." href="/products" cta="All products" />
       <ScrollRow className="crow">{categories.map((category, index) => <Link className="cbub" key={category.slug} href={`/category/${category.slug}`} style={{ "--tint": tints[index % tints.length] } as React.CSSProperties}>
-        <span className="cbub-img">{category.image ? <img src={category.image} alt="" loading="lazy" /> : <Icon name="chip" size={34} />}</span>
+        <span className="cbub-img">{category.image ? <Pic src={category.image} size={480} /> : <Icon name="chip" size={34} />}</span>
         <b>{category.name}</b><small>from {inr(category.from)}</small>
       </Link>)}</ScrollRow>
     </section>}
 
     {shown(HomepageSectionType.FEATURED_PRODUCTS) && <>
+      {phones.length > 0 && phoneCategory && <section className="home-section"><div className="panel panel-sky">
+        <div className="panel-head"><div><span className="panel-tag"><Icon name="phone" size={14} /> Smartphones</span><h2>Phones from {inr(phoneFrom)}</h2><p>New and certified refurbished smartphones, all in stock now.</p>
+          {phoneBrands.length > 1 && <div className="chip-row">{phoneBrands.map(([slug, name]) => <Link key={slug} href={`/products?category=${phoneCategory.slug}&brand=${slug}`}>{name}</Link>)}</div>}</div>
+          <Link className="panel-btn" href={`/category/${phoneCategory.slug}`}>Shop all phones <Icon name="arrow" size={15} /></Link></div>
+        <Row products={phones} />
+      </div></section>}
+
       {liveCoupons.length > 0 && <section className="home-section"><Head icon="tag" title="Offers you can use today" note="Copy a code and apply it at checkout." /><div className="coupon-strip">{liveCoupons.map((coupon) => { const copy = couponCopy(coupon); return <article className="coupon" key={coupon.id}><span className="coupon-icon"><Icon name="tag" size={20} /></span><div><strong>{copy.value}</strong><small>{copy.details}</small></div><CopyCode code={coupon.code} /></article>; })}</div></section>}
 
       {megaDeals.length > 0 && <section className="home-section"><div className="panel panel-peach">
@@ -172,7 +189,7 @@ export default async function Home() {
 
       {tiles.length > 0 && <section className="home-section"><div className={`tiles n${tiles.length}`}>{tiles.map((tile) => <Link key={tile.key} href={tile.href} className={`tile ${tile.className}`}>
         <div className="tile-copy"><small>{tile.tag}</small><b>{tile.title}</b>{"note" in tile && tile.note && <span>{tile.note}</span>}<i>Shop now <Icon name="arrow" size={14} /></i></div>
-        {tile.image && <span className="tile-img"><img src={tile.image} alt="" loading="lazy" /></span>}
+        {tile.image && <span className="tile-img"><Pic src={tile.image} size={480} /></span>}
       </Link>)}</div></section>}
 
       {refurbished.length > 0 && <section className="home-section"><div className="panel panel-green">

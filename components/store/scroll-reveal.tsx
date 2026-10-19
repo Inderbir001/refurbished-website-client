@@ -1,52 +1,14 @@
 "use client";
-import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-// Two small behaviours for the whole storefront:
-//  1. Elements marked data-reveal / data-reveal-group fade up as they scroll into view (children of a group stagger).
-//     Anything already on screen is left alone, so there is no flash and nothing is hidden without JavaScript.
-//  2. html[data-scrolled] lets the header gain a shadow once the page has moved.
-// Parts of the storefront that animate in without needing a data attribute in their markup.
-const AUTO_GROUPS = ".srow-track, .tiles, .why2-cards, .coupon-strip, .brand-chips, .budget-chips, .faq, .acc-group, .product-grid, .stat-grid";
-const AUTO_ITEMS = ".home-head, .panel, .why2-head, .help2, .detail-bottom, .brand-marquee";
-
+// html[data-scrolled] lets the header gain a shadow once the page has moved.
+// (Sections and cards rise into view with a pure CSS scroll timeline in motion.css, so nothing here touches the page's markup.)
 export function ScrollReveal() {
-  const pathname = usePathname();
-
   useEffect(() => {
     const onScroll = () => { document.documentElement.dataset.scrolled = window.scrollY > 8 ? "true" : "false"; };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        entry.target.classList.remove("rv-pending");
-        entry.target.classList.add("rv-in");
-        observer.unobserve(entry.target);
-      }
-    }, { threshold: 0.1, rootMargin: "0px 0px -5% 0px" });
-
-    // Wait until React has finished hydrating the page: changing server-rendered elements before that triggers hydration warnings.
-    const setup = () => {
-      document.querySelectorAll<HTMLElement>(AUTO_GROUPS).forEach((element) => element.setAttribute("data-reveal-group", ""));
-      document.querySelectorAll<HTMLElement>(AUTO_ITEMS).forEach((element) => { if (!element.hasAttribute("data-reveal-group")) element.setAttribute("data-reveal", ""); });
-      document.querySelectorAll<HTMLElement>("[data-reveal], [data-reveal-group]").forEach((element) => {
-        if (element.classList.contains("rv-in") || element.classList.contains("rv-pending")) return;
-        const rect = element.getBoundingClientRect();
-        if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) return;
-        if (element.hasAttribute("data-reveal-group")) Array.from(element.children).forEach((child, index) => (child as HTMLElement).style.setProperty("--i", String(Math.min(index, 10))));
-        element.classList.add("rv-pending");
-        observer.observe(element);
-      });
-    };
-    const timer = window.setTimeout(() => requestAnimationFrame(setup), 350);
-    return () => { window.clearTimeout(timer); observer.disconnect(); };
-  }, [pathname]);
-
   return null;
 }
