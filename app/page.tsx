@@ -99,7 +99,7 @@ export default async function Home() {
       if (!row.image && product.images[0]) row.image = product.images[0].url;
       categoryStats.set(product.category.id, row);
     }
-    if (product.brand) {
+    if (product.brand && !/^(unbranded|generic|no brand)$/i.test(product.brand.name.trim())) {
       const row = brandStats.get(product.brand.id) ?? { name: product.brand.name, slug: product.brand.slug, count: 0, logo: product.brand.logoUrl ?? null };
       row.count += 1; brandStats.set(product.brand.id, row);
     }

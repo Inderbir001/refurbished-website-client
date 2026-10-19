@@ -253,9 +253,9 @@
 .bm-track { display: flex; width: max-content; animation: bm-scroll var(--dur, 40s) linear infinite; }
 .brand-marquee:hover .bm-track, .brand-marquee:focus-within .bm-track { animation-play-state: paused; }
 .bm-track ul { display: flex; align-items: center; flex: none; gap: 14px; margin: 0; padding: 0 7px; list-style: none; }
-.bm-track a { display: grid; place-items: center; min-width: 120px; height: 56px; padding: 0 22px; border-radius: 999px; background: #faf6f1; transition: background .2s, transform .2s; }
+.bm-track a { display: grid; place-items: center; min-width: 130px; height: 64px; padding: 0 24px; border-radius: 999px; background: #faf6f1; transition: background .2s, transform .2s; }
 .bm-track a:hover { background: var(--peach); transform: translateY(-2px); }
-.bm-track img { max-width: 110px; max-height: 32px; object-fit: contain; mix-blend-mode: multiply; }
+.bm-track img { max-width: 120px; max-height: 38px; object-fit: contain; mix-blend-mode: multiply; }
 .bm-track span { font: 800 16px var(--font-head), sans-serif; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; }
 @keyframes bm-scroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .brand-marquee { -webkit-mask-image: none; mask-image: none; overflow-x: auto; } .bm-track { animation: none; } .bm-track ul[aria-hidden] { display: none; } }
