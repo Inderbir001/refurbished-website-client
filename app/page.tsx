@@ -195,7 +195,13 @@ export default async function Home() {
       {refurbished.length > 0 && <section className="home-section"><div className="panel panel-green">
         <div className="panel-head"><div><span className="panel-tag"><Icon name="shield" size={14} /> Certified refurbished</span><h2>{refurbSavings ? `Same tech, up to ${refurbSavings}% less` : "Same tech, smarter price"}</h2><p>Tested and graded before it ships, with warranty and {returnDays}-day returns.</p></div><Link className="panel-btn" href="/products?condition=REFURBISHED">Shop refurbished <Icon name="arrow" size={15} /></Link></div>
         {refurbished.length < 5
-          ? <div className="panel-body"><Row products={refurbished} /><ul className="panel-points"><li><Icon name="check" size={18} /> Tested and graded before it ships</li><li><Icon name="check" size={18} /> Warranty included on every device</li><li><Icon name="check" size={18} /> {returnDays}-day easy returns</li><li><Icon name="check" size={18} /> Pay securely, pay less</li></ul></div>
+          ? <div className="panel-body"><Row products={refurbished} /><div className="panel-facts">
+            {refurbSavings > 0 && <div className="fact big"><b>Up to {refurbSavings}% off</b><span>the original price on certified refurbished devices</span></div>}
+            <div className="fact"><i><Icon name="shield" size={22} /></i><b>Tested before it ships</b><span>Every device is checked and graded by us before it leaves.</span></div>
+            <div className="fact"><i><Icon name="star" size={22} /></i><b>Honest condition grades</b><span>The grade is shown on every product page, so there are no surprises.</span></div>
+            <div className="fact"><i><Icon name="check" size={22} /></i><b>Warranty included</b><span>Certified refurbished devices come with warranty.</span></div>
+            <div className="fact"><i><Icon name="return" size={22} /></i><b>{returnDays}-day easy returns</b><span>Not happy? Start a return from your account in a few taps.</span></div>
+          </div></div>
           : <Row products={refurbished} />}
       </div></section>}
 

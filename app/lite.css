@@ -83,3 +83,14 @@ a, button, summary, [role="button"], label { -webkit-tap-highlight-color: rgba(2
   /* the search shares its row with "Shop all", so the results drop down across the whole screen */
   .header-search .search-suggestions { right: auto; width: calc(100vw - 32px); max-width: 520px; }
 }
+
+/* ===== search: the brand's dark green (final say; overrides the orange version above) ===== */
+.header-search form { border-color: #1f3b32; background: #fff; box-shadow: 0 8px 20px rgba(20, 33, 31, .12); }
+.header-search form:hover { border-color: #14211f; box-shadow: 0 10px 24px rgba(20, 33, 31, .18); }
+.header-search form:focus-within { border-color: #14211f; box-shadow: 0 0 0 4px rgba(38, 73, 61, .2), 0 12px 26px rgba(20, 33, 31, .2); }
+.header-search button, .header-search button:hover { background: linear-gradient(135deg, #2a5444 0%, #14211f 100%); box-shadow: 0 6px 14px rgba(20, 33, 31, .35); }
+.header-search button:hover { box-shadow: 0 10px 20px rgba(20, 33, 31, .45); }
+.sh-search .header-search:empty { border-color: #1f3b32; background: #fff; }
+.header-search .search-suggestions { border-color: #dfe8e3; box-shadow: 0 24px 50px rgba(20, 33, 31, .2); }
+.header-search .search-suggestions a:hover { background: #eef5f1; }
+.header-search .search-suggestions small { background: #e3efe8; color: #1f3b32; }
