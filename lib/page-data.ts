@@ -42,7 +42,7 @@ export const pageLoaders = {
       db.homepageBanner.findMany({ where: { isVisible: true, AND: [{ OR: [{ startsAt: null }, { startsAt: { lte: now } }] }, { OR: [{ endsAt: null }, { endsAt: { gte: now } }] }] }, orderBy: { position: "asc" } }),
       listDeals(),
       db.coupon.findMany({ where: { isActive: true, startsAt: { lte: now }, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] }, orderBy: { createdAt: "desc" }, take: 12 }),
-      db.collection.findMany({ where: { isActive: true, products: { some: { product: { status: "ACTIVE", deletedAt: null } } } }, include: { products: { where: { product: { status: "ACTIVE", deletedAt: null } }, orderBy: { position: "asc" }, take: 4, include: { product: { include: productCardInclude } } } }, orderBy: { createdAt: "asc" }, take: 3 }),
+      db.collection.findMany({ where: { isActive: true, products: { some: { product: { status: "ACTIVE", deletedAt: null } } } }, include: { products: { where: { product: { status: "ACTIVE", deletedAt: null } }, orderBy: { position: "asc" }, take: 12, include: { product: { include: productCardInclude } } } }, orderBy: { createdAt: "asc" }, take: 4 }),
       // "Best sellers": a collection with that name that the owner curates wins; otherwise what has really been paid for.
       db.collection.findFirst({ where: { slug: "best-sellers", isActive: true }, select: { products: { orderBy: { position: "asc" }, take: 14, select: { productId: true } } } }),
       db.orderItem.groupBy({ by: ["productId"], where: { order: { paymentStatus: "SUCCESS", status: { notIn: ["CANCELLED", "RETURNED", "REFUNDED"] } } }, _sum: { quantity: true }, orderBy: { _sum: { quantity: "desc" } }, take: 14 }),

@@ -15,7 +15,7 @@ function useReset(anchor: React.RefObject<HTMLElement | null>, onReset: () => vo
   }); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
-export function ImageField({ name, label, defaultValue = "", required = false, hint, alt = "", onValue }: { name: string; label: string; defaultValue?: string; required?: boolean; hint?: string; alt?: string; onValue?: (url: string) => void }) {
+export function ImageField({ name, label, defaultValue = "", required = false, hint, alt = "", noun = "photo", onValue }: { name: string; label: string; defaultValue?: string; required?: boolean; hint?: string; alt?: string; noun?: string; onValue?: (url: string) => void }) {
   const [value, setValue] = useState(defaultValue);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +24,7 @@ export function ImageField({ name, label, defaultValue = "", required = false, h
   const proxy = useRef<HTMLInputElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   useReset(root, () => { setValue(defaultValue); setError(""); });
-  useEffect(() => { proxy.current?.setCustomValidity(required && !value ? "Please upload a photo." : ""); onValue?.(value); }, [required, value]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { proxy.current?.setCustomValidity(required && !value ? `Please upload a ${noun}.` : ""); onValue?.(value); }, [required, value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function choose(file: File | undefined) {
     if (!file) return;
@@ -38,7 +38,7 @@ export function ImageField({ name, label, defaultValue = "", required = false, h
     <div className="imgf-box">
       <div className="imgf-preview">{value ? <img src={value} alt="" /> : <span aria-hidden>🖼</span>}</div>
       <div className="imgf-actions">
-        <button type="button" className="secondary-button" disabled={busy} onClick={() => picker.current?.click()}>{busy ? "Uploading…" : value ? "Change photo" : "Upload photo"}</button>
+        <button type="button" className="secondary-button" disabled={busy} onClick={() => picker.current?.click()}>{busy ? "Uploading…" : value ? `Change ${noun}` : `Upload ${noun}`}</button>
         {value && !busy && <button type="button" className="imgf-link" onClick={() => setValue("")}>Remove</button>}
         <input ref={picker} type="file" accept="image/*" hidden onChange={(event) => void choose(event.target.files?.[0])} />
         <input ref={proxy} className="imgf-proxy" name={name} value={value} required={required} onChange={() => undefined} tabIndex={-1} aria-hidden />

@@ -19,7 +19,7 @@ function CatalogFields({ entity, categories = [], products = [], value, ownId, f
     <label>Name<input name="name" required defaultValue={value?.name} placeholder={`e.g. ${entity === "collections" ? "Best Sellers" : entity === "brands" ? "Samsung" : "Earphones"}`} /><small>Shown to customers on the store.</small></label>
     <label>Web address<input name="slug" required pattern="[a-z0-9-]+" defaultValue={value?.slug} placeholder="best-sellers" /><small>Letters, numbers and dashes only. Part of the page link.</small></label>
     <label className="wide">Description<textarea name="description" defaultValue={value?.description ?? ""} placeholder={`A short line about this ${kind}.`} /></label>
-    <div className="wide"><ImageField name="imageUrl" label="Picture (optional)" defaultValue={value?.imageUrl ?? ""} /></div>
+    <div className="wide"><ImageField name="imageUrl" label={entity === "brands" ? "Brand logo (optional)" : "Picture (optional)"} defaultValue={value?.imageUrl ?? ""} noun={entity === "brands" ? "logo" : "photo"} hint={entity === "brands" ? "Upload the logo from your computer. A clear logo on a white or transparent background looks best. It shows on the homepage next to the brand name." : undefined} /></div>
     {entity === "categories" && <>
       <label>Parent category<select name="parentId" defaultValue={value?.parentId ?? ""}><option value="">Top level</option>{categories.filter((item) => item.id !== ownId).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       <label>Position in the menu<input name="position" type="number" min="0" defaultValue={value?.position ?? 0} /><small>Smaller numbers come first.</small></label>

@@ -91,7 +91,7 @@ export default async function Home() {
   const liveCoupons = coupons.filter((coupon) => coupon.usageLimit === null || coupon.usedCount < coupon.usageLimit).slice(0, 4);
 
   const categoryStats = new Map<string, { name: string; slug: string; from: number; count: number; image: string | null }>();
-  const brandStats = new Map<string, { name: string; slug: string; count: number }>();
+  const brandStats = new Map<string, { name: string; slug: string; count: number; logo: string | null }>();
   for (const { product, price } of real) {
     if (product.category) {
       const row = categoryStats.get(product.category.id) ?? { name: product.category.name, slug: product.category.slug, from: price, count: 0, image: null };
@@ -100,7 +100,7 @@ export default async function Home() {
       categoryStats.set(product.category.id, row);
     }
     if (product.brand) {
-      const row = brandStats.get(product.brand.id) ?? { name: product.brand.name, slug: product.brand.slug, count: 0 };
+      const row = brandStats.get(product.brand.id) ?? { name: product.brand.name, slug: product.brand.slug, count: 0, logo: product.brand.logoUrl ?? null };
       row.count += 1; brandStats.set(product.brand.id, row);
     }
   }
@@ -121,7 +121,8 @@ export default async function Home() {
   ].filter((tile): tile is NonNullable<typeof tile> => Boolean(tile));
 
   const slides = banners.filter((banner) => banner.imageUrl).map((banner) => ({ id: banner.id, title: banner.title, href: banner.linkUrl, image: banner.imageUrl, mobile: banner.mobileImageUrl }));
-  const collectionRows = collections.filter((collection) => collection.slug !== "best-sellers" && collection.products.length).slice(0, 2);
+  // A collection with only one or two products looks empty on the homepage, so it appears once it has at least three.
+  const collectionRows = collections.filter((collection) => collection.slug !== "best-sellers" && collection.products.length >= 3).slice(0, 2);
   const phone = settings?.supportPhone?.trim();
   const email = settings?.supportEmail?.trim();
   const faqs: [string, string][] = [
@@ -143,6 +144,10 @@ export default async function Home() {
         {[["truck", "Free delivery", `On orders over ${inr(freeFrom)}`], ["return", `${returnDays}-day returns`, "Simple and hassle free"], ["shield", "Warranty included", "On every device we sell"], ["lock", "Secure payments", "UPI, cards, net banking"]].map(([icon, title, note]) => <article key={title}><span><Icon name={icon} size={22} /></span><div><b>{title}</b><small>{note}</small></div></article>)}
       </div></section>
     </>}
+
+    {shown(HomepageSectionType.BRANDS) && brandList.length > 0 && <section className="brand-marquee" aria-label="Brands we stock" style={{ "--dur": `${Math.max(28, brandList.length * 3)}s` } as React.CSSProperties}>
+      <div className="bm-track">{[0, 1].map((copy) => <ul key={copy} aria-hidden={copy === 1 ? true : undefined}>{brandList.map((brand) => <li key={brand.slug}><Link href={`/products?brand=${brand.slug}`} tabIndex={copy === 1 ? -1 : undefined} title={brand.name}>{brand.logo ? <img src={brand.logo} alt={copy === 1 ? "" : brand.name} loading="lazy" /> : <span>{brand.name}</span>}</Link></li>)}</ul>)}</div>
+    </section>}
 
     {shown(HomepageSectionType.FEATURED_PRODUCTS) && firstRow.length > 0 && <section className="home-section">
       <Head icon={bestSellers.length ? "flame" : "sparkle"} title={bestSellers.length ? titleOf(HomepageSectionType.FEATURED_PRODUCTS, "Best sellers") : "Top picks"} note={bestSellers.length ? "What our customers are buying most." : "Our favourite finds in stock right now."} href="/products?sort=popular" cta="View all" />
@@ -186,7 +191,7 @@ export default async function Home() {
     </section>)}
 
     {shown(HomepageSectionType.BRANDS) && <>
-      {brandList.length > 0 && <section className="home-section"><Head title={titleOf(HomepageSectionType.BRANDS, "Shop by brand")} /><div className="brand-chips">{brandList.map((brand) => <Link key={brand.slug} href={`/products?brand=${brand.slug}`}>{brand.name}<small>{brand.count}</small></Link>)}</div></section>}
+      {brandList.length > 0 && <section className="home-section"><Head title={titleOf(HomepageSectionType.BRANDS, "Shop by brand")} note="Pick a brand you trust." href="/products" cta="All products" /><ScrollRow className="brow">{brandList.map((brand) => <Link className="btile" key={brand.slug} href={`/products?brand=${brand.slug}`}><span className="btile-logo">{brand.logo ? <img src={brand.logo} alt={brand.name} loading="lazy" /> : <b>{brand.name}</b>}</span>{brand.logo && <b>{brand.name}</b>}<small>{brand.count} {brand.count === 1 ? "product" : "products"}</small></Link>)}</ScrollRow></section>}
       {budgetTiles.length > 0 && <section className="home-section"><Head title="Shop by budget" /><div className="budget-chips">{budgetTiles.map((tile, index) => <Link key={tile.limit} href={`/products?max=${tile.limit}&sort=price-asc`} style={{ "--tint": tints[index % tints.length] } as React.CSSProperties}><small>Under</small><b>{inr(tile.limit * 100)}</b><span>{tile.count} products <Icon name="arrow" size={13} /></span></Link>)}</div></section>}
     </>}
 
