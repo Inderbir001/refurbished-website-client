@@ -28,3 +28,27 @@ a, button, summary, [role="button"], label { -webkit-tap-highlight-color: rgba(2
   .btile-logo { background: #fff; }
   .product-card:hover { transform: none; box-shadow: none; }
 }
+
+/* ===== product cards: the Add to cart row always sits at the bottom, so buttons line up across a row ===== */
+.product-card { display: flex; flex-direction: column; }
+.product-card .product-copy { display: flex; flex-direction: column; flex: 1 1 auto; }
+.product-card .card-actions { margin-top: auto; padding-top: 14px; }
+.prow-item > .product-card, .product-grid > .product-card { height: 100%; }
+
+/* ===== cart on phones: lines may shrink, the quantity row wraps, nothing pushes the page wider ===== */
+.cart-page > div, .cart-lines article > div, .order-summary { min-width: 0; }
+@media (max-width: 700px) {
+  .cart-page { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .cart-page h1 { font-size: 34px; line-height: 1.1; }
+  .cart-lines article { grid-template-columns: 84px minmax(0, 1fr); gap: 14px; padding-inline: 4px; }
+  .cart-image { height: 84px; }
+  .cart-lines h3 { margin: 2px 0 4px; font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .quantity { flex-wrap: wrap; gap: 10px; }
+  .quantity .remove { margin-left: 0; }
+}
+
+/* ===== sideways rows on phones run to the screen edge instead of stopping short and slicing a card off ===== */
+@media (max-width: 900px) {
+  .home-section .srow-track { margin-inline: calc(-1 * clamp(16px, 4vw, 64px)); padding-inline: clamp(16px, 4vw, 64px); scroll-padding-inline: clamp(16px, 4vw, 64px); }
+  .home-section .panel .srow-track { margin-inline: calc(-1 * clamp(20px, 3vw, 38px)); padding-inline: clamp(20px, 3vw, 38px); scroll-padding-inline: clamp(20px, 3vw, 38px); }
+}
