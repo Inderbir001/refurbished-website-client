@@ -12,9 +12,26 @@ const cartInclude = { items: { include: { product: { include: { images: { orderB
 async function ensureCart(actor: CartActor) {
   if (!actor.userId && !actor.sessionToken) throw new AppError(400, "Cart identity is missing.");
   const where: Prisma.CartWhereUniqueInput = actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken! };
-  return db.cart.upsert({ where, update: {}, create: actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken! } });
+  // An existing cart (the usual case) costs one query; Prisma's upsert needs five round trips to the database.
+  const found = await db.cart.findUnique({ where });
+  if (found) return found;
+  try { return await db.cart.create({ data: actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken! } }); }
+  catch (error) {
+    // Two requests created the same cart at once: use the one that won.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") return db.cart.findUniqueOrThrow({ where });
+    throw error;
+  }
 }
-const loadCart = (cartId: string) => db.cart.findUniqueOrThrow({ where: { id: cartId }, include: cartInclude });
+// One database query (a join) instead of a chain of six: every query is a round trip to the database.
+const loadCart = (cartId: string) => db.cart.findUniqueOrThrow({ where: { id: cartId }, include: cartInclude, relationLoadStrategy: "join" });
+type CartWithItems = Prisma.CartGetPayload<{ include: typeof cartInclude }>;
+const emptyCart = (): CartWithItems => ({ id: "", userId: null, sessionToken: null, couponCode: null, items: [], createdAt: new Date(), updatedAt: new Date() });
+// Looking at the cart never writes anything: a visitor with no cart yet simply has an empty one (it is created when they add something).
+export async function readCart(actor: CartActor): Promise<CartWithItems> {
+  if (!actor.userId && !actor.sessionToken) return emptyCart();
+  const where: Prisma.CartWhereUniqueInput = actor.userId ? { userId: actor.userId } : { sessionToken: actor.sessionToken! };
+  return (await db.cart.findUnique({ where, include: cartInclude, relationLoadStrategy: "join" })) ?? emptyCart();
+}
 export async function getOrCreateCart(actor: CartActor) { return loadCart((await ensureCart(actor)).id); }
 export async function getCart(actor: CartActor) { return getOrCreateCart(actor); }
 async function addToCart(actor: CartActor, input: { productId: string; variantId?: string; quantity: number }) {
