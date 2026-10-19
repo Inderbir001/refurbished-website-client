@@ -43,15 +43,15 @@ export function SearchBox({ defaultValue = "", variant = "page" }: { defaultValu
   return (
     <div className={variant === "header" ? "search-box header-search" : "search-box"} onFocus={() => setOpen(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }} onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}>
       <form action="/products" role="search" onSubmit={submit}>
-        <input name="q" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search" aria-label="Search products" autoComplete="off" />
+        <input name="q" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={variant === "header" ? "Search phones & more" : "Search"} aria-label="Search products" autoComplete="off" />
         <button aria-label="Search">
           {variant === "header" ? <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg> : "Search"}
         </button>
       </form>
       {showPanel && (
         <div className="search-suggestions" onMouseDown={(event) => event.preventDefault()}>
-          {showRecent && recent.map((item) => <Link key={item} href={`/products?q=${encodeURIComponent(item)}`} onClick={() => setOpen(false)}><small>Recent</small>{item}</Link>)}
-          {suggestions.map((item) => <Link key={`${item.type}:${item.href}`} href={item.href} onClick={() => { setOpen(false); setQuery(""); }}><small>{item.type}</small>{item.label}</Link>)}
+          {showRecent && recent.map((item) => <Link key={item} href={`/products?q=${encodeURIComponent(item)}`} onClick={() => setOpen(false)}><small>Recent</small><span>{item}</span></Link>)}
+          {suggestions.map((item) => <Link key={`${item.type}:${item.href}`} href={item.href} onClick={() => { setOpen(false); setQuery(""); }}><small>{item.type}</small><span>{item.label}</span></Link>)}
         </div>
       )}
     </div>
