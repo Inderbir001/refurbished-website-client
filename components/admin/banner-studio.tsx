@@ -59,30 +59,36 @@ function draw(canvas: HTMLCanvasElement, family: string, opts: Opts, photo: HTML
   // text block
   const x0 = mobile ? 56 : opts.side === "right" ? 96 : w * 0.47;
   const maxW = mobile ? w - 112 : w * 0.43;
-  const blocks: { h: number; paint: (y: number) => void }[] = [];
+  type Block = { h: number; paint: (y: number) => void };
+  const before: Block[] = []; const after: Block[] = [];
   if (opts.badge.trim()) {
     const size = mobile ? 24 : 26; ctx.font = `700 ${size}px ${family}`;
     const label = opts.badge.trim().toUpperCase(); ctx.letterSpacing = "1.5px"; const bw = ctx.measureText(label).width + 48; ctx.letterSpacing = "0px";
-    blocks.push({ h: size + 26, paint: (y) => { ctx.fillStyle = t.accent; pill(ctx, x0, y, bw, size + 24); ctx.fill(); ctx.font = `700 ${size}px ${family}`; ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.letterSpacing = "1.5px"; ctx.fillText(label, x0 + 22, y + (size + 24) / 2 + 1); ctx.letterSpacing = "0px"; } });
+    before.push({ h: size + 26, paint: (y) => { ctx.fillStyle = t.accent; pill(ctx, x0, y, bw, size + 24); ctx.fill(); ctx.font = `700 ${size}px ${family}`; ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.letterSpacing = "1.5px"; ctx.fillText(label, x0 + 22, y + (size + 24) / 2 + 1); ctx.letterSpacing = "0px"; } });
   }
-  let hs = mobile ? 76 : 96; let lines: string[] = [];
-  for (; hs >= 40; hs -= 4) { ctx.font = `800 ${hs}px ${family}`; lines = wrap(ctx, opts.headline.trim() || "Your headline", maxW); if (lines.length <= (mobile ? 2 : 3)) break; }
-  blocks.push({ h: lines.length * hs * 1.06, paint: (y) => { ctx.font = `800 ${hs}px ${family}`; ctx.fillStyle = t.text; ctx.textBaseline = "alphabetic"; lines.forEach((line, i) => ctx.fillText(line, x0, y + hs * 0.86 + i * hs * 1.06)); } });
   if (opts.sub.trim()) {
     const size = mobile ? 30 : 36; ctx.font = `500 ${size}px ${family}`; const sl = wrap(ctx, opts.sub.trim(), maxW).slice(0, 2);
-    blocks.push({ h: sl.length * size * 1.4, paint: (y) => { ctx.font = `500 ${size}px ${family}`; ctx.fillStyle = t.sub; ctx.textBaseline = "alphabetic"; sl.forEach((line, i) => ctx.fillText(line, x0, y + size * 1.05 + i * size * 1.4)); } });
+    after.push({ h: sl.length * size * 1.4, paint: (y) => { ctx.font = `500 ${size}px ${family}`; ctx.fillStyle = t.sub; ctx.textBaseline = "alphabetic"; sl.forEach((line, i) => ctx.fillText(line, x0, y + size * 1.05 + i * size * 1.4)); } });
   }
   if (opts.price.trim()) {
     const size = mobile ? 38 : 46; ctx.font = `800 ${size}px ${family}`; const label = opts.price.trim();
-    blocks.push({ h: size + 6, paint: (y) => { ctx.font = `800 ${size}px ${family}`; ctx.fillStyle = t.accent; ctx.textBaseline = "alphabetic"; ctx.fillText(label, x0, y + size * 0.95); } });
+    after.push({ h: size + 6, paint: (y) => { ctx.font = `800 ${size}px ${family}`; ctx.fillStyle = t.accent; ctx.textBaseline = "alphabetic"; ctx.fillText(label, x0, y + size * 0.95); } });
   }
   if (opts.button.trim()) {
     const size = mobile ? 28 : 30; ctx.font = `700 ${size}px ${family}`; const label = `${opts.button.trim()}  →`; const bw = ctx.measureText(label).width + 72; const bh = size + 40;
-    blocks.push({ h: bh, paint: (y) => { ctx.fillStyle = t.light ? t.accent : t.accent; pill(ctx, x0, y, bw, bh); ctx.fill(); ctx.font = `700 ${size}px ${family}`; ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.fillText(label, x0 + 36, y + bh / 2 + 1); } });
+    after.push({ h: bh, paint: (y) => { ctx.fillStyle = t.accent; pill(ctx, x0, y, bw, bh); ctx.fill(); ctx.font = `700 ${size}px ${family}`; ctx.fillStyle = t.accentText; ctx.textBaseline = "middle"; ctx.fillText(label, x0 + 36, y + bh / 2 + 1); } });
   }
   const gap = mobile ? 22 : 28;
+  // The headline takes the biggest size that still fits the picture with everything else, so a longer headline shrinks instead of pushing the button off the bottom.
+  const margin = mobile ? 56 : 44; const roomY = h - margin * 2;
+  const fixed = [...before, ...after].reduce((sum, block) => sum + block.h, 0) + gap * (before.length + after.length);
+  const maxLines = mobile ? 2 : 3; const headline = opts.headline.trim() || "Your headline";
+  let hs = mobile ? 76 : 96; let lines: string[] = [];
+  for (; hs >= 30; hs -= 2) { ctx.font = `800 ${hs}px ${family}`; lines = wrap(ctx, headline, maxW); if (lines.length <= maxLines && lines.length * hs * 1.06 <= roomY - fixed) break; }
+  if (hs < 30) { hs = 30; ctx.font = `800 ${hs}px ${family}`; lines = wrap(ctx, headline, maxW).slice(0, maxLines); }
+  const blocks: Block[] = [...before, { h: lines.length * hs * 1.06, paint: (y) => { ctx.font = `800 ${hs}px ${family}`; ctx.fillStyle = t.text; ctx.textBaseline = "alphabetic"; lines.forEach((line, i) => ctx.fillText(line, x0, y + hs * 0.86 + i * hs * 1.06)); } }, ...after];
   const total = blocks.reduce((sum, block) => sum + block.h, 0) + gap * (blocks.length - 1);
-  let y = mobile ? 56 : Math.max(48, (h - total) / 2);
+  let y = mobile ? margin : Math.max(margin, (h - total) / 2);
   for (const block of blocks) { block.paint(y); y += block.h + gap; }
 }
 
