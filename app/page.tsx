@@ -114,9 +114,9 @@ export default async function Home() {
   const topBrand = brandList[0];
   const brandPhoto = topBrand ? photo(real.find((entry) => entry.product.brand?.slug === topBrand.slug && entry.product.images[0])?.product) : null;
   const tiles = [
-    refurbished.length ? { key: "refurb", className: "t-refurb", tag: "Certified refurbished", title: refurbSavings ? `Same tech, up to ${refurbSavings}% less` : "Tested, graded and covered by warranty", href: "/products?condition=REFURBISHED", image: photo(refurbished[0]) } : null,
     budgetTile ? { key: "budget", className: "t-budget", tag: "Shop by budget", title: `Under ${inr(budgetTile.limit * 100)}`, note: `${budgetTile.count} products`, href: `/products?max=${budgetTile.limit}&sort=price-asc`, image: budgetPhoto } : null,
     categories[0] ? { key: "cat", className: "t-cat", tag: "Popular", title: categories[0].name, note: `From ${inr(categories[0].from)}`, href: `/category/${categories[0].slug}`, image: categories[0].image } : null,
+    categories[1] ? { key: "cat2", className: "t-cat2", tag: "Trending", title: categories[1].name, note: `From ${inr(categories[1].from)}`, href: `/category/${categories[1].slug}`, image: categories[1].image } : null,
     topBrand ? { key: "brand", className: "t-brand", tag: "Top brand", title: topBrand.name, note: `${topBrand.count} products`, href: `/products?brand=${topBrand.slug}`, image: brandPhoto } : null,
   ].filter((tile): tile is NonNullable<typeof tile> => Boolean(tile));
 
@@ -195,29 +195,27 @@ export default async function Home() {
       {budgetTiles.length > 0 && <section className="home-section"><Head title="Shop by budget" /><div className="budget-chips">{budgetTiles.map((tile, index) => <Link key={tile.limit} href={`/products?max=${tile.limit}&sort=price-asc`} style={{ "--tint": tints[index % tints.length] } as React.CSSProperties}><small>Under</small><b>{inr(tile.limit * 100)}</b><span>{tile.count} products <Icon name="arrow" size={13} /></span></Link>)}</div></section>}
     </>}
 
-    {shown(HomepageSectionType.TRUST) && <section className="home-section"><div className="why">
-      <div className="why-cols">
-        <div>
-          <Head title="Why shop with Mobile &amp; More" />
-          <div className="why-grid">
-            <article><span><Icon name="shield" /></span><b>Tested and covered</b><p>Every device is checked before it ships. Refurbished phones carry a 6-month warranty.</p></article>
-            <article><span><Icon name="return" /></span><b>{returnDays}-day easy returns</b><p>Not what you expected? Start a return from your account in a couple of taps.</p></article>
-            <article><span><Icon name="lock" /></span><b>Safe, verified payments</b><p>Orders are confirmed only after your payment is verified.</p></article>
+    {shown(HomepageSectionType.TRUST) && <section className="home-section why2">
+      <div className="why2-head"><span className="why2-tag">Shop with confidence</span><h2>Why shop with Mobile &amp; More</h2><p>Everything you need to buy the right device, without the guesswork.</p></div>
+      <div className="why2-cards">
+        {[["shield", "Tested and covered", "Every device is checked before it ships. Refurbished phones carry a 6-month warranty.", "#ffe6d8"],
+          ["return", `${returnDays}-day easy returns`, "Not what you expected? Start a return from your account in a couple of taps.", "#dff3e8"],
+          ["lock", "Safe, verified payments", "Pay by UPI, card or net banking. Orders are confirmed only after your payment is verified.", "#ebe5fb"],
+          ["truck", "Free delivery", `Orders above ${inr(freeFrom)} ship free. Smaller orders show the delivery charge before you pay.`, "#dcedfb"]].map(([icon, title, text, tint]) => <article key={title} style={{ "--tint": tint } as React.CSSProperties}><span><Icon name={icon} size={26} /></span><b>{title}</b><p>{text}</p></article>)}
+      </div>
+      <div className="why2-grid">
+        <div className="faq"><h3>Quick answers</h3>{faqs.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}</div>
+        <aside className="help2">
+          <span className="help2-icon"><Icon name="sparkle" size={22} /></span>
+          <h3>Need a hand choosing?</h3>
+          <p>Tell us what you are looking for and we will point you to the right device.</p>
+          <div className="help2-actions">
+            {phone && <a className="btn-solid" href={`tel:${phone.replace(/[^+\d]/g, "")}`}><Icon name="phone" size={17} /> {phone}</a>}
+            {email && <a className="btn-line" href={`mailto:${email}`}><Icon name="mail" size={17} /> {email}</a>}
+            {!phone && !email && <Link className="btn-solid" href="/contact">Contact us</Link>}
           </div>
-        </div>
-        <div className="faq">
-          <h3>Quick answers</h3>
-          {faqs.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}
-        </div>
+        </aside>
       </div>
-      <div className="help-card">
-        <div><b>Need a hand choosing?</b><p>Tell us what you are looking for and we will point you to the right device.</p></div>
-        <div className="help-actions">
-          {phone && <a className="btn-solid" href={`tel:${phone.replace(/[^+\d]/g, "")}`}><Icon name="phone" size={17} /> {phone}</a>}
-          {email && <a className="btn-line" href={`mailto:${email}`}><Icon name="mail" size={17} /> {email}</a>}
-          {!phone && !email && <Link className="btn-solid" href="/contact">Contact us</Link>}
-        </div>
-      </div>
-    </div></section>}
+    </section>}
   </div>;
 }
